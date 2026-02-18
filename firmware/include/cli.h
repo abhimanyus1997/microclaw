@@ -1,6 +1,7 @@
 #ifndef CLI_H
 #define CLI_H
 
+#include "common.h"
 #include "config_manager.h"
 
 class CLI {
@@ -140,10 +141,27 @@ private:
             Serial.print("Telegram: "); Serial.println(config.telegram_token.substring(0, 5) + "...");
             Serial.print("Gemini Key: "); Serial.println(config.gemini_key.substring(0, 5) + "...");
             Serial.print("Groq Key: "); Serial.println(config.groq_key.substring(0, 5) + "...");
+        } else if (command == "system_info") {
+            Serial.println(SystemTools::getSystemInfo());
+        } else if (command == "gpio_set") {
+            if (argCount >= 2) {
+                int pin = args[0].toInt();
+                int val = args[1].toInt();
+                Serial.println(GpioTools::setPin(pin, val));
+            } else {
+                Serial.println("Usage: gpio_set <pin> <0/1>");
+            }
+        } else if (command == "gpio_get") {
+            if (argCount >= 1) {
+                int pin = args[0].toInt();
+                Serial.println(GpioTools::getPin(pin));
+            } else {
+                Serial.println("Usage: gpio_get <pin>");
+            }
         } else if (command == "restart") {
             ESP.restart();
         } else {
-            Serial.println("Unknown command. Available: wifi_set, set_tg_token, set_api_key, config_show, restart");
+            Serial.println("Unknown command. Available: wifi_set, set_tg_token, set_api_key, config_show, restart, system_info, gpio_set, gpio_get");
         }
     }
 };

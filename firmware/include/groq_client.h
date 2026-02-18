@@ -3,7 +3,7 @@
 
 #include <WiFiClientSecure.h>
 #include <HTTPClient.h>
-#include <ArduinoJson.h>
+#include "common.h"
 
 class GroqClient {
 public:
@@ -54,12 +54,42 @@ public:
             DeserializationError error = deserializeJson(responseDoc, response);
 
             if (!error) {
-                // Groq/OpenAI format: choices[0].message.content
-                const char* outputText = responseDoc["choices"][0]["message"]["content"];
-                if (outputText) {
-                    result = String(outputText);
+                // Check for tool calls first
+                JsonArray toolCalls = responseDoc["choices"][0]["message"]["tool_calls"];
+                if (toolCalls.size() > 0) {
+                    // Assuming only one tool call for simplicity in this example
+                    JsonObject toolCall = toolCalls[0];
+                    String functionName = toolCall["function"]["name"];
+                    JsonObject funcArgs = toolCall["function"]["arguments"];
+                    String toolOutput = "";
+
+                    // Placeholder for actual tool execution.
+                    // You would need to define 'claw' and 'SystemTools' objects/functions
+                    // in your main sketch or pass them to GroqClient.
+                    // For this example, we'll assume they are accessible.
+                    // Example: extern Claw claw; extern SystemTools systemTools;
+
+                    if (functionName == "get_system_stats" || functionName == "claw_control" || functionName == "gpio_control") {
+                         // Translate Native Tool Call to the JSON format main.cpp expects
+                        DynamicJsonDocument jsonDoc(2048);
+                        jsonDoc["thought"] = "Agent invoked native tool: " + functionName;
+                        jsonDoc["tool"] = functionName;
+                        jsonDoc["args"] = funcArgs; 
+                        jsonDoc["reply"] = "Executing " + functionName + "...";
+                        
+                        serializeJson(jsonDoc, result);
+                    } else {
+                         result = "{\"thought\": \"Unknown tool called\", \"tool\": \"none\", \"reply\": \"Error: Model tried to call unknown tool " + functionName + "\"}";
+                    }
+
                 } else {
-                    result = "{\"error\": \"No text in Groq response\"}";
+                    // Groq/OpenAI format: choices[0].message.content
+                    const char* outputText = responseDoc["choices"][0]["message"]["content"];
+                    if (outputText) {
+                        result = String(outputText);
+                    } else {
+                        result = "{\"error\": \"No text in Groq response\"}";
+                    }
                 }
             } else {
                 result = "{\"error\": \"JSON parsing failed\"}";
