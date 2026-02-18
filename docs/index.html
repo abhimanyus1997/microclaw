@@ -373,19 +373,20 @@
         }
 
         .card {
-            background: var(--card-bg);
+            background: rgba(15, 15, 20, 0.7);
+            backdrop-filter: blur(10px);
             padding: 40px;
             border-radius: 24px;
-            border: 1px solid var(--card-border);
+            border: 1px solid rgba(255, 77, 77, 0.15);
             position: relative;
             overflow: hidden;
-            transition: transform 0.3s, border-color 0.3s;
+            transition: transform 0.4s ease, border-color 0.4s ease, box-shadow 0.4s ease;
         }
 
         .card:hover {
-            transform: translateY(-5px);
-            border-color: var(--primary);
-            background: rgba(255, 77, 77, 0.02);
+            transform: translateY(-8px) scale(1.02);
+            border-color: rgba(255, 77, 77, 0.6);
+            box-shadow: 0 10px 40px rgba(255, 77, 77, 0.15), 0 0 80px rgba(255, 77, 77, 0.05);
         }
 
         .card::before {
@@ -395,7 +396,8 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: radial-gradient(circle at top right, rgba(255, 255, 255, 0.03), transparent 40%);
+            background: radial-gradient(circle at top right, rgba(255, 77, 77, 0.06), transparent 50%);
+            pointer-events: none;
         }
 
         .card h3 {
@@ -433,11 +435,19 @@
         }
 
         .uc-card {
-            background: #0f0f0f;
+            background: rgba(15, 15, 20, 0.6);
+            backdrop-filter: blur(8px);
             padding: 30px;
             border-radius: 16px;
             border: 1px solid #1a1a1a;
             text-align: left;
+            transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .uc-card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(255, 77, 77, 0.4);
+            box-shadow: 0 8px 30px rgba(255, 77, 77, 0.1);
         }
 
         .uc-card h4 {
@@ -496,33 +506,35 @@
         </div>
     </nav>
 
-    <div class="hero">
-        <div class="badge-new">v1.0 Alpha</div>
-        <h1 data-text="AI on Hardware.">AI on Hardware<br>(AoH).</h1>
-        <p>MicroClaw is the definition of <strong>AI on Hardware</strong>. It interfaces LLMs directly with the real
+    <div class="hero" id="hero">
+        <div class="badge-new" style="animation: reveal 0.8s ease 0.2s both">v1.0 Alpha</div>
+        <h1 data-text="AI on Hardware." data-parallax="0.3">AI on Hardware<br>(AoH).</h1>
+        <p data-parallax="0.15" style="animation: reveal 1s ease 0.5s both">MicroClaw is the definition of <strong>AI on
+                Hardware</strong>. It interfaces LLMs directly with the real
             world through GPIOs, Servos, and Sensors.</p>
 
-        <div class="cta-group">
-            <a href="manual.html#quickstart" class="btn-primary">Build Yours</a>
-            <a href="manual.html" class="btn-secondary">Read Docs</a>
+        <div class="cta-group" data-parallax="0.1" style="animation: reveal 1s ease 0.8s both">
+            <a href="manual.html#quickstart" class="btn-primary" onmouseover="playSfx('hover')"
+                onclick="playSfx('click')">Build Yours</a>
+            <a href="manual.html" class="btn-secondary" onmouseover="playSfx('hover')">Read Docs</a>
         </div>
     </div>
 
     <section class="features-section">
         <div class="grid">
-            <div class="card reveal" onmouseover="playSfx('hover')">
+            <div class="card reveal" style="transition-delay:0s" onmouseover="playSfx('hover')">
                 <span class="icon">🧠</span>
                 <h3>Dual-Core Strategy</h3>
                 <p>Why choose one? MicroClaw intelligently switches between <strong>Gemini 1.5 Pro</strong> for complex
                     reasoning and <strong>Groq</strong> for instant, sub-second responses.</p>
             </div>
-            <div class="card reveal" onmouseover="playSfx('hover')">
+            <div class="card reveal" style="transition-delay:0.15s" onmouseover="playSfx('hover')">
                 <span class="icon">🦾</span>
                 <h3>Physical Intelligence</h3>
                 <p>It creates its own tools. From reading sensors to toggling relays, MicroClaw translates natural
                     language into direct GPIO manipulation.</p>
             </div>
-            <div class="card reveal" onmouseover="playSfx('hover')">
+            <div class="card reveal" style="transition-delay:0.3s" onmouseover="playSfx('hover')">
                 <span class="icon">📂</span>
                 <h3>Total Recall</h3>
                 <p>Conversations shouldn't vanish on reboot. MicroClaw maintains a persistent <code>MEMORY.md</code>
@@ -534,11 +546,11 @@
     <section class="use-cases reveal">
         <h2>What can it do?</h2>
         <div class="use-case-grid">
-            <div class="uc-card reveal" onmouseover="playSfx('hover')">
+            <div class="uc-card reveal" style="transition-delay:0s" onmouseover="playSfx('hover')">
                 <h4>Server Monitor</h4>
                 <p>"MicroClaw, watch my API endpoint. If it goes down, wave your arm frantically to alert me."</p>
             </div>
-            <div class="uc-card reveal" onmouseover="playSfx('hover')">
+            <div class="uc-card reveal" style="transition-delay:0.15s" onmouseover="playSfx('hover')">
                 <h4>Focus Timer</h4>
                 <p>"Set a timer for 25 minutes. Keep the LED blue while I work, then turn it green when done."</p>
             </div>
@@ -611,9 +623,39 @@
             if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
         }, { once: true });
 
+        // Intersection Observer for Scroll Reveal
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('active');
+                }
+            });
+        }, { threshold: 0.15 });
+
+        // Smart Parallax on Scroll
+        function handleParallax() {
+            const scrollY = window.scrollY;
+            document.querySelectorAll('[data-parallax]').forEach(el => {
+                const speed = parseFloat(el.dataset.parallax);
+                el.style.transform = `translateY(${scrollY * speed}px)`;
+            });
+            // Subtle hero fade on scroll
+            const hero = document.getElementById('hero');
+            if (hero) {
+                const opacity = Math.max(1 - scrollY / 600, 0);
+                hero.style.opacity = opacity;
+            }
+        }
+
+        window.addEventListener('scroll', () => {
+            requestAnimationFrame(handleParallax);
+        });
+
         window.addEventListener('load', () => {
+            document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
             setTimeout(() => {
-                console.log("System Online");
+                playSfx('boot');
+                console.log('System Online');
             }, 1000);
         });
     </script>
