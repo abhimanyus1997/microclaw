@@ -76,14 +76,7 @@ The ESP32 hosts its own web server for direct AI chat over your local network:
 <p><em>Chat interface served directly from the ESP32 — system stats, GPIO control, and AI reasoning in real time.</em></p>
 </div>
 
-## 🛠️ Hardware
 
-- **ESP32 Development Board** (ESP32-WROOM-32 / DevKit V1)
-- **Servo Motor** (SG90 or MG996R)
-  - `Signal` -> GPIO 18
-  - `VCC` -> 5V / VIN
-  - `GND` -> GND
-- **Power**: USB Cable or 5V Battery
 
 ## 👨‍💻 Development
 
