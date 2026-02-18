@@ -237,12 +237,146 @@
             margin-bottom: 10px;
             display: block;
         }
+
+        /* Mobile Sidebar Toggle */
+        .sidebar-toggle {
+            display: none;
+            position: fixed;
+            top: 14px;
+            left: 14px;
+            z-index: 1001;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 10px;
+            cursor: pointer;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .sidebar-toggle span {
+            display: block;
+            width: 20px;
+            height: 2px;
+            background: #fff;
+            border-radius: 2px;
+            transition: all 0.3s;
+        }
+
+        .sidebar-toggle.active span:nth-child(1) {
+            transform: rotate(45deg) translate(4px, 4px);
+        }
+
+        .sidebar-toggle.active span:nth-child(2) {
+            opacity: 0;
+        }
+
+        .sidebar-toggle.active span:nth-child(3) {
+            transform: rotate(-45deg) translate(4px, -4px);
+        }
+
+        .sidebar-backdrop {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 998;
+        }
+
+        .sidebar-backdrop.active {
+            display: block;
+        }
+
+        @media (max-width: 768px) {
+            .sidebar-toggle {
+                display: flex;
+            }
+
+            body {
+                flex-direction: column;
+                height: auto;
+                overflow: auto;
+            }
+
+            nav {
+                position: fixed;
+                top: 0;
+                left: -300px;
+                height: 100vh;
+                width: 260px;
+                z-index: 999;
+                transition: left 0.3s ease;
+                overflow-y: auto;
+                padding-top: 60px;
+            }
+
+            nav.open {
+                left: 0;
+            }
+
+            main {
+                padding: 20px 16px;
+                padding-top: 60px;
+                overflow: visible;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            h2 {
+                font-size: 1.5rem;
+            }
+
+            h3 {
+                font-size: 1.15rem;
+            }
+
+            p {
+                font-size: 0.95rem;
+            }
+
+            .tagline {
+                font-size: 1rem;
+            }
+
+            .grid {
+                grid-template-columns: 1fr;
+                gap: 12px;
+            }
+
+            .card {
+                padding: 18px;
+            }
+
+            table {
+                display: block;
+                overflow-x: auto;
+            }
+
+            th,
+            td {
+                padding: 10px 12px;
+                font-size: 0.9rem;
+                white-space: nowrap;
+            }
+
+            pre {
+                padding: 12px;
+                font-size: 0.85rem;
+            }
+        }
     </style>
 </head>
 
 <body>
 
-    <nav>
+    <button class="sidebar-toggle" onclick="toggleSidebar()" aria-label="Toggle Menu">
+        <span></span><span></span><span></span>
+    </button>
+    <div class="sidebar-backdrop" id="sidebarBackdrop" onclick="toggleSidebar()"></div>
+
+    <nav id="sidebarNav">
         <div class="logo">🦞 Micro<span>Claw</span></div>
         <a href="#intro" class="active">Introduction</a>
         <a href="#quickstart">⚡ Quick Start</a>
@@ -405,13 +539,21 @@ uv run main.py</code></pre>
     </main>
 
     <script>
-        // Simple active link highlighter
+        // Simple active link highlighter + auto-close sidebar on mobile
         document.querySelectorAll('nav a').forEach(link => {
             link.addEventListener('click', function () {
                 document.querySelectorAll('nav a').forEach(a => a.classList.remove('active'));
                 this.classList.add('active');
+                // Close sidebar on mobile when link clicked
+                if (window.innerWidth <= 768) toggleSidebar();
             });
         });
+
+        function toggleSidebar() {
+            document.getElementById('sidebarNav').classList.toggle('open');
+            document.querySelector('.sidebar-toggle').classList.toggle('active');
+            document.getElementById('sidebarBackdrop').classList.toggle('active');
+        }
     </script>
 </body>
 
