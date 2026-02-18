@@ -18,10 +18,10 @@ MicroClaw is NOT just a claw controller. It transforms a \$5 ESP32 into a **gene
 
 ## ✨ Features
 
-- **🧠 Dual Brain**: Switch between **Google Gemini 1.5 Flash** (Multimodal) and **Groq** (Llama 3, Ultra-Fast).
+- **🧠 Dual Brain**: Switch between **Google Gemini* and **Groq** Providers.
 - **🕸️ MicroClaw Manager**: A professional, dark-themed Web UI for configuration, flashing, and monitoring.
 - **🦾 Tool Use**: The AI can autonomously control servos (Open, Close, Wave) and manage its own memory.
-- **💾 Long-Term Memory**: Remembers context across reboots using persistent file storage (`MEMORY.md`).
+- **💾 Long-Term Memory**: Remembers context across reboots using persistent file storage
 - **💬 Multi-Interface**: Chat via **Web UI**, **Telegram**, or **Serial Terminal**.
 - **🔌 Zero-Friction Setup**: Auto-detects ports, interactive CLI wizard, and one-click firmware flashing.
 
