@@ -1,0 +1,6 @@
+{
+    "wifi_ssid": "YOUR_WIFI_NAME",
+    "wifi_password": "YOUR_WIFI_PASSWORD",
+    "telegram_token": "YOUR_TELEGRAM_BOT_TOKEN",
+    "gemini_key": "YOUR_GEMINI_API_KEY"
+}
