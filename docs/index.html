@@ -9,6 +9,14 @@
         href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Space+Grotesk:wght@300;700&display=swap"
         rel="stylesheet">
     <style>
+        /* Fix horizontal overflow globally */
+        html,
+        body {
+            overflow-x: hidden !important;
+            width: 100%;
+            position: relative;
+        }
+
         :root {
             --bg: #050505;
             --primary: #ff4d4d;
@@ -324,7 +332,7 @@
             flex-direction: column;
             gap: 5px;
             padding: 8px;
-            z-index: 1001;
+            z-index: 1100;
             cursor: pointer;
         }
 
@@ -349,42 +357,169 @@
             transform: rotate(-45deg) translate(5px, -5px);
         }
 
-        .mobile-overlay {
+        /* Drawer Backdrop */
+        /* Drawer Backdrop */
+        .drawer-backdrop {
             display: none;
             position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(8px);
+            z-index: 1050;
+            opacity: 0;
+            transition: opacity 0.4s ease;
+        }
+
+        .drawer-backdrop.active {
+            display: block;
+            opacity: 1;
+        }
+
+        .mobile-overlay {
+            position: fixed;
             top: 0;
-            left: 0;
-            width: 100vw;
+            right: -300px;
+            width: 300px;
             height: 100vh;
-            background: rgba(5, 5, 5, 0.96);
-            backdrop-filter: blur(20px);
-            z-index: 999;
+            background: rgba(10, 10, 10, 0.85);
+            /* Premium glass background */
+            backdrop-filter: blur(25px) saturate(180%);
+            -webkit-backdrop-filter: blur(25px) saturate(180%);
+            border-left: 1px solid rgba(255, 255, 255, 0.1);
+            z-index: 1060;
+            display: flex;
             flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            gap: 30px;
+            transition: right 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            box-shadow: -15px 0 40px rgba(0, 0, 0, 0.6);
         }
 
         .mobile-overlay.active {
+            right: 0;
+        }
+
+        .drawer-header {
+            padding: 30px 25px 15px;
             display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
         }
 
-        .mobile-overlay a {
-            font-size: 1.5rem;
-            color: #ccc;
-            font-weight: 600;
-            font-family: 'Space Grotesk', sans-serif;
-            transition: color 0.3s;
+        .drawer-logo {
+            font-size: 1.4rem;
+            font-weight: 800;
+            color: #fff;
+            letter-spacing: -0.5px;
         }
 
-        .mobile-overlay a:hover {
+        .drawer-logo span {
             color: var(--primary);
         }
 
-        /* Responsive */
+        .drawer-close {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #fff;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .drawer-content {
+            padding: 20px 15px;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .drawer-link {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 12px 15px;
+            border-radius: 12px;
+            text-decoration: none;
+            transition: 0.3s;
+            background: transparent;
+        }
+
+        .drawer-link:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .drawer-link .icon-box {
+            width: 40px;
+            height: 40px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .drawer-link .text-box {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .drawer-link .label {
+            font-size: 1.05rem;
+            font-weight: 600;
+            color: #fff;
+            font-family: 'Space Grotesk', sans-serif;
+        }
+
+        .drawer-link .subtext {
+            font-size: 0.8rem;
+            color: #666;
+            margin-top: 2px;
+        }
+
+        .drawer-footer {
+            padding: 25px;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .drawer-v {
+            font-size: 0.9rem;
+            color: #666;
+            /* Slightly brighter for readability */
+            letter-spacing: 0.5px;
+            text-transform: none;
+            /* Changed from uppercase for better fit */
+        }
+
+        .drawer-badge {
+            background: var(--primary);
+            color: #000;
+            padding: 5px 12px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            font-weight: 800;
+            display: inline-block;
+            width: fit-content;
+            margin-bottom: 5px;
+        }
+
         @media (max-width: 768px) {
             .hamburger {
                 display: flex;
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                z-index: 1100;
             }
 
             .nav-links {
@@ -395,37 +530,55 @@
                 padding: 15px 4%;
             }
 
+            /* Fix 3800px overflow */
+            .grid-plane {
+                display: none !important;
+            }
+
+            .grid-container {
+                overflow: hidden !important;
+                max-width: 100vw !important;
+            }
+
             .logo {
                 font-size: 1.2rem;
             }
 
             .hero {
-                padding: 80px 16px 100px;
+                padding: 100px 16px 80px;
             }
 
             .hero h1 {
-                font-size: 2.8rem;
+                font-size: 2.5rem !important;
+                line-height: 1.1 !important;
+                margin-bottom: 20px !important;
                 letter-spacing: -1px;
             }
 
             .hero p {
-                font-size: 1rem;
-                max-width: 90vw;
+                font-size: 1rem !important;
+                max-width: 100%;
+                padding: 0 10px;
+                margin-bottom: 30px !important;
             }
 
             .cta-group {
                 flex-direction: column;
                 align-items: center;
                 gap: 12px;
+                padding: 0 20px;
+                width: 100%;
+                box-sizing: border-box;
             }
 
             .btn-primary,
             .btn-secondary {
                 padding: 14px 32px;
                 font-size: 0.95rem;
-                width: 100%;
-                max-width: 280px;
+                width: 100% !important;
+                max-width: 280px !important;
                 text-align: center;
+                box-sizing: border-box;
             }
 
             .features-section {
@@ -433,12 +586,13 @@
             }
 
             .grid {
-                grid-template-columns: 1fr;
+                grid-template-columns: 1fr !important;
                 gap: 16px;
+                padding: 0 10px;
             }
 
             .card {
-                padding: 24px;
+                padding: 25px !important;
                 border-radius: 16px;
             }
 
@@ -451,9 +605,10 @@
             }
 
             .use-case-grid {
-                grid-template-columns: 1fr;
+                grid-template-columns: 1fr !important;
                 gap: 12px;
                 margin-top: 30px;
+                padding: 0 10px;
             }
 
             .uc-card {
@@ -465,7 +620,7 @@
             }
 
             .showcase h2 {
-                font-size: 1.8rem !important;
+                font-size: 2rem !important;
             }
 
             .showcase>p {
@@ -482,8 +637,8 @@
                 width: 100%;
                 max-width: 280px;
                 text-align: center;
-                padding: 10px 20px;
-                font-size: 0.85rem;
+                padding: 12px 15px !important;
+                font-size: 0.9rem !important;
             }
 
             .screenshot-grid {
@@ -499,6 +654,11 @@
                 cursor: default;
             }
 
+            /* Disable parallax on mobile to prevent layout shift */
+            [data-parallax] {
+                transform: none !important;
+            }
+
             footer {
                 padding: 40px 4%;
             }
@@ -506,21 +666,18 @@
 
         @media (max-width: 480px) {
             .hero h1 {
-                font-size: 2.2rem;
+                font-size: 2rem !important;
             }
 
-            .hero p {
-                font-size: 0.9rem;
-            }
-
-            .card h3 {
-                font-size: 1.15rem;
+            .logo {
+                font-size: 1.1rem !important;
             }
 
             .logo img {
-                height: 28px;
+                height: 32px !important;
             }
         }
+
 
         @media (hover: none) {
 
@@ -873,11 +1030,44 @@
         </button>
     </nav>
 
-    <!-- Mobile Nav Overlay (outside nav to avoid height constraints) -->
+    <div class="drawer-backdrop" id="drawerBackdrop" onclick="toggleMobileNav()"></div>
+
+    <!-- Professional Mobile Drawer -->
     <div class="mobile-overlay" id="mobileNav">
-        <a href="manual.html" onclick="toggleMobileNav()">📖 Documentation</a>
-        <a href="https://github.com/abhimanyus1997/microclaw" onclick="toggleMobileNav()">🐙 GitHub</a>
-        <a href="manual.html#quickstart" onclick="toggleMobileNav()" style="color:var(--primary)">🚀 Get Started</a>
+        <div class="drawer-header">
+            <div class="drawer-logo">🦞 Micro<span>Claw</span></div>
+            <div class="drawer-close" onclick="toggleMobileNav()">×</div>
+        </div>
+
+        <div class="drawer-content">
+            <a href="manual.html" class="drawer-link" onclick="toggleMobileNav()">
+                <div class="icon-box">📖</div>
+                <div class="text-box">
+                    <span class="label">Documentation</span>
+                    <span class="subtext">Full API & Setup Guide</span>
+                </div>
+            </a>
+            <a href="https://github.com/abhimanyus1997/microclaw" class="drawer-link" onclick="toggleMobileNav()">
+                <div class="icon-box">🐙</div>
+                <div class="text-box">
+                    <span class="label">GitHub</span>
+                    <span class="subtext">Source & Contributions</span>
+                </div>
+            </a>
+            <a href="manual.html#quickstart" class="drawer-link" onclick="toggleMobileNav()">
+                <div class="icon-box">🚀</div>
+                <div class="text-box">
+                    <span class="label" style="color:var(--primary)">Get Started</span>
+                    <span class="subtext">Burn Firmware in 5min</span>
+                </div>
+            </a>
+        </div>
+
+        <div class="drawer-footer">
+            <div class="drawer-v" style="font-weight:600; color:#888">Version 1.0 Alpha</div>
+            <div class="drawer-badge">BUILT FOR PHYSICAL AI</div>
+            <div class="drawer-v" style="color:#555">Created by abhimanyus1997</div>
+        </div>
     </div>
 
     <div class="hero" id="hero">
@@ -1010,7 +1200,7 @@
     </section>
 
     <footer>
-        <p>Built with ❤️ by <strong>Abhimanyu Singh</strong>.<br>
+        <p>Built with ❤️ by <strong>Abhimanyu Singh</strong> (abhimanyus1997).<br>
             <a href="https://github.com/abhimanyus1997" target="_blank"
                 style="color:var(--text-dim); margin:0 10px;">GitHub</a> •
             <a href="https://linkedin.com/in/abhimanyus1997" target="_blank"
@@ -1076,9 +1266,11 @@
 
         // Mobile Nav Toggle
         function toggleMobileNav() {
+            const isOpening = !document.getElementById('mobileNav').classList.contains('active');
             document.querySelector('.hamburger').classList.toggle('active');
             document.getElementById('mobileNav').classList.toggle('active');
-            document.body.style.overflow = document.getElementById('mobileNav').classList.contains('active') ? 'hidden' : '';
+            document.getElementById('drawerBackdrop').classList.toggle('active');
+            document.body.style.overflow = isOpening ? 'hidden' : '';
         }
 
         // Magnifier Lens
