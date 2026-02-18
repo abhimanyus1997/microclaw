@@ -1,37 +1,20 @@
 #ifndef TOOLS_H
 #define TOOLS_H
 
-#include "claw_controller.h"
-#include "file_system.h"
-#include <ArduinoJson.h>
+#include "common.h"
+#include "wifi_tools.h"
+#include "ble_tools.h"
 
 class Tools {
 public:
-    Tools(ClawController* claw) : _claw(claw) {}
+    Tools() {}
 
     // Execute a tool call based on name and arguments (JSON object)
     String execute(String toolName, JsonObject args) {
         Serial.print("Executing tool: ");
         Serial.println(toolName);
 
-        if (toolName == "claw_control") {
-            String action = args["action"].as<String>();
-            if (action == "OPEN") {
-                _claw->open();
-                return "Claw opened";
-            } else if (action == "CLOSE") {
-                _claw->close();
-                return "Claw closed";
-            } else if (action == "WAVE") {
-                _claw->open(); delay(300);
-                _claw->close(); delay(300);
-                _claw->open();
-                return "Claw waved";
-            } else {
-                return "Unknown claw action";
-            }
-        } 
-        else if (toolName == "memory_write") {
+        if (toolName == "memory_write") {
             const char* content = args["content"];
             if (content) {
                 fsManager.appendFile("/MEMORY.md", content);
@@ -45,12 +28,28 @@ public:
             if (mem == "") return "Memory is empty";
             return mem;
         }
+        else if (toolName == "get_system_stats") {
+            return SystemTools::getSystemInfo();
+        }
+        else if (toolName == "gpio_control") {
+            int pin = args["pin"];
+            const char* mode = args["mode"];
+            if (String(mode) == "output") {
+                int state = args["state"];
+                return GpioTools::setPin(pin, state);
+            } else {
+                return GpioTools::getPin(pin);
+            }
+        }
+        else if (toolName == "wifi_scan") {
+            return WifiTools::scan();
+        }
+        else if (toolName == "ble_scan") {
+            return BleTools::scan();
+        }
 
         return "Unknown tool";
     }
-
-private:
-    ClawController* _claw;
 };
 
 #endif

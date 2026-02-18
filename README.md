@@ -1,21 +1,91 @@
-# MicroClaw: AI-Powered ESP32 Agent
+<div align="center">
 
-<p align="center">
-  <strong>The open-source, affordable AI agent for ESP32</strong>
-</p>
+# <img src="docs/logo.png" height="40" valign="middle"> MicroClaw 🦞
+### AI on Hardware (AoH) for ESP32
 
-MicroClaw turns a standard ESP32 development board into a physical AI agent. It connects to Wi-Fi, chats with you via Telegram, remembers your conversations, and controls a robotic claw to interact with the world.
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![PlatformIO](https://img.shields.io/badge/PlatformIO-Build-orange.svg)](https://platformio.org/)
+[![Python](https://img.shields.io/badge/Python-3.10+-yellow.svg)](https://python.org)
 
-## Features
+MicroClaw is NOT just a claw controller. It transforms a \$5 ESP32 into a **general-purpose physical AI agent** capable of reasoning, remembering, and acting in the real world. Powered by **Google Gemini** or **Groq**, it can control ANY hardware connected to the ESP32 (sensors, relays, motors, LEDs) through natural language.
 
-- **🧠 Gemini AI Powered**: Uses Google's Gemini 1.5 Flash model for fast, intelligent responses.
-- **💬 Telegram Integration**: Chat with your claw from anywhere in the world.
-- **🔧 Tool Use**: The AI can autonomously control servos (Open, Close, Wave) and manage its own memory.
-- **📁 Local Memory**: Remembers context across reboots using persistent file storage (`MEMORY.md`).
-- **⚙️ CLI Configuration**: runtime configuration for Wi-Fi and API keys via Python CLI or Serial Monitor.
-- **🔌 Cheap & Accessible**: Runs on a standard ESP32 ($5) with a simple servo ($2).
+[Features](#features) • [Quick Start](#quick-start) • [Web UI](#web-dashboard) • [Hardware](#hardware)
 
-## Project Structure
+</div>
+
+---
+
+## ✨ Features
+
+- **🧠 Dual Brain**: Switch between **Google Gemini 1.5 Flash** (Multimodal) and **Groq** (Llama 3, Ultra-Fast).
+- **🕸️ MicroClaw Manager**: A professional, dark-themed Web UI for configuration, flashing, and monitoring.
+- **🦾 Tool Use**: The AI can autonomously control servos (Open, Close, Wave) and manage its own memory.
+- **💾 Long-Term Memory**: Remembers context across reboots using persistent file storage (`MEMORY.md`).
+- **💬 Multi-Interface**: Chat via **Web UI**, **Telegram**, or **Serial Terminal**.
+- **🔌 Zero-Friction Setup**: Auto-detects ports, interactive CLI wizard, and one-click firmware flashing.
+
+## 🚀 Quick Start
+
+### 1. Installation
+Requires Python 3.10+. We recommend using `uv` for speed.
+
+```bash
+# Install tool dependencies
+uv pip install -r tools/requirements.txt
+```
+
+### 2. Launch the Manager
+The **MicroClaw Manager** handles everything: permissions, flashing, and chatting.
+
+```bash
+# Launches the Web UI (asks for sudo password once for USB access)
+python3 main.py
+```
+
+Open **[http://localhost:8000](http://localhost:8000)** in your browser.
+
+### 3. Setup & Flash
+1.  Go to the **Setup Tab** in the Web UI.
+2.  **Flash Firmware**: Upload `firmware.bin` (or build it yourself) and click Flash.
+3.  **Configure**: Enter your Wi-Fi credentials and API Keys (Gemini or Groq).
+4.  **Connect**: Switch to the **Monitor Tab** to see the AI boot up!
+
+## 🖥️ Web Dashboard
+
+The new **MicroClaw Manager** features a professional, space-themed interface:
+- **Real-time Terminal**: Monitor serial logs with color-coded ease.
+- **Smart Control**: Restart device, scan Wi-Fis, and send commands.
+- **Secure Config**: Set API keys without editing code.
+
+## 🛠️ Hardware
+
+- **ESP32 Development Board** (ESP32-WROOM-32 / DevKit V1)
+- **Servo Motor** (SG90 or MG996R)
+  - `Signal` -> GPIO 18
+  - `VCC` -> 5V / VIN
+  - `GND` -> GND
+- **Power**: USB Cable or 5V Battery
+
+## 👨‍💻 Development
+
+Everything is open source.
+
+**Firmware (C++)**:
+```bash
+cd firmware
+pio run -t upload
+```
+
+**CLI Tool (Python)**:
+```bash
+python tools/microclaw.py --help
+```
+
+---
+
+<div align="center">
+Created by <b>Abhimanyu Singh</b> • <a href="https://github.com/abhimanyus1997">GitHub</a> • <a href="https://linkedin.com/in/abhimanyus1997">LinkedIn</a>
+</div>
 
 ```text
 microclaw/
