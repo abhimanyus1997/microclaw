@@ -51,16 +51,20 @@ Open **[http://localhost:8000](http://localhost:8000)** in your browser.
 3.  **Configure**: Enter your Wi-Fi credentials and API Keys (Gemini or Groq).
 4.  **Connect**: Switch to the **Monitor Tab** to see the AI boot up!
 
-## 🖥️ Web Dashboard
+## 🖥️ MicroClaw Manager (Desktop)
 
-The new **MicroClaw Manager** features a professional, space-themed interface:
+The **MicroClaw Manager** is a Python-based web UI for setup and monitoring:
 - **Real-time Terminal**: Monitor serial logs with color-coded ease.
 - **Smart Control**: Restart device, scan Wi-Fis, and send commands.
 - **Secure Config**: Set API keys without editing code.
 
+## 💬 ESP32 Web UI (On-Device)
+
+The ESP32 hosts its own web server for direct AI chat over your local network:
+
 <div align="center">
-<img src="docs/chat_demo.png" alt="MicroClaw AI Chat Demo" width="800">
-<p><em>AI Chat — system stats reporting and GPIO control via natural language.</em></p>
+<img src="docs/chat_demo.png" alt="MicroClaw ESP32 Web Chat" width="800">
+<p><em>Chat interface served directly from the ESP32 — system stats, GPIO control, and AI reasoning in real time.</em></p>
 </div>
 
 ## 🛠️ Hardware
