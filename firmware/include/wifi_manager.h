@@ -5,9 +5,14 @@
 
 class WifiManager {
 public:
-    WifiManager(const char* ssid, const char* password) : _ssid(ssid), _password(password) {}
+    WifiManager(const char* ssid, const char* password, const char* hostname = nullptr) 
+        : _ssid(ssid), _password(password), _hostname(hostname) {}
 
     void connect() {
+        if (_hostname) {
+            WiFi.setHostname(_hostname);
+        }
+
         Serial.print("Connecting to WiFi: ");
         Serial.println(_ssid);
         
@@ -37,6 +42,7 @@ public:
 private:
     const char* _ssid;
     const char* _password;
+    const char* _hostname;
 };
 
 #endif

@@ -123,10 +123,18 @@ restart
 
 ### 3. Usage
 
-**Chat via Telegram**:
+**Chat via Web Interface (New!)**:
+1. Open Serial Monitor to see the IP Address (e.g., `192.168.1.50`).
+2. Open `http://<IP_ADDRESS>` in your browser/phone.
+3. Chat with MicroClaw directly!
+
+**Chat via Telegram (Optional)**:
 - Send "Hello!" -> AI replies.
 - Send "Open the claw" -> AI calls the `claw_control` tool -> Claw opens -> AI confirms "Claw opened".
 - Send "Remember that I like red balls" -> AI writes to `MEMORY.md`.
+
+**Chat via Serial**:
+- You can also type directly into the Serial Monitor to interact with the agent (mainly for debugging).
 
 ## Development
 

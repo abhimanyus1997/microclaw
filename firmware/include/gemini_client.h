@@ -18,7 +18,7 @@ public:
         WiFiClientSecure client;
         client.setInsecure(); // For prototyping; use root CA for production
 
-        String url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=" + String(_apiKey);
+        String url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=" + String(_apiKey);
 
         if (!http.begin(client, url)) {
             return "{\"error\": \"Unable to connect\"}";

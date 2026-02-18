@@ -11,6 +11,8 @@ public:
     String wifi_password;
     String telegram_token;
     String gemini_key;
+    String groq_key;
+    String ai_provider; // "gemini" or "groq"
 
     void begin() {
         // Load from file, fallback to secrets.h
@@ -20,7 +22,9 @@ public:
             wifi_ssid = WIFI_SSID;
             wifi_password = WIFI_PASSWORD;
             gemini_key = GEMINI_API_KEY;
-            telegram_token = ""; // No default for telegram in secrets.h yet
+            groq_key = ""; 
+            ai_provider = "groq"; // Default to Groq as requested
+            telegram_token = ""; 
             save(); // Save defaults to file
         } else {
             DynamicJsonDocument doc(1024);
@@ -29,6 +33,10 @@ public:
             wifi_password = doc["wifi_password"].as<String>();
             telegram_token = doc["telegram_token"].as<String>();
             gemini_key = doc["gemini_key"].as<String>();
+            
+            if (doc.containsKey("groq_key")) groq_key = doc["groq_key"].as<String>();
+            if (doc.containsKey("ai_provider")) ai_provider = doc["ai_provider"].as<String>();
+            else ai_provider = "groq"; // Default fallback
         }
     }
 
@@ -38,6 +46,8 @@ public:
         doc["wifi_password"] = wifi_password;
         doc["telegram_token"] = telegram_token;
         doc["gemini_key"] = gemini_key;
+        doc["groq_key"] = groq_key;
+        doc["ai_provider"] = ai_provider;
 
         String output;
         serializeJson(doc, output);

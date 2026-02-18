@@ -6,5 +6,8 @@ readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
     "esptool>=5.2.0",
+    "fastapi>=0.129.0",
+    "platformio>=6.1.19",
     "pyserial>=3.5",
+    "uvicorn>=0.40.0",
 ]

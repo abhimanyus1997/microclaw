@@ -1,2 +1,7 @@
 pyserial
 esptool
+fastapi
+uvicorn
+jinja2
+python-multipart
+websockets

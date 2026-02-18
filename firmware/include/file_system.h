@@ -15,6 +15,9 @@ public:
     }
 
     String readFile(const char* path) {
+        if (!LittleFS.exists(path)) {
+            return "";
+        }
         File file = LittleFS.open(path, "r");
         if (!file) {
             return "";
