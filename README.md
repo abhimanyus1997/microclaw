@@ -6,6 +6,7 @@
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![PlatformIO](https://img.shields.io/badge/PlatformIO-Build-orange.svg)](https://platformio.org/)
 [![Python](https://img.shields.io/badge/Python-3.10+-yellow.svg)](https://python.org)
+[![Live Docs](https://img.shields.io/badge/Live-Docs-ff6b6b?style=flat&logo=github)](https://abhimanyus1997.github.io/microclaw/)
 
 MicroClaw is NOT just a claw controller. It transforms a \$5 ESP32 into a **general-purpose physical AI agent** capable of reasoning, remembering, and acting in the real world. Powered by **Google Gemini** or **Groq**, it can control ANY hardware connected to the ESP32 (sensors, relays, motors, LEDs) through natural language.
 
