@@ -509,9 +509,9 @@
     <div class="hero" id="hero">
         <div class="badge-new" style="animation: reveal 0.8s ease 0.2s both">v1.0 Alpha</div>
         <h1 data-text="AI on Hardware." data-parallax="0.3">AI on Hardware<br>(AoH).</h1>
-        <p data-parallax="0.15" style="animation: reveal 1s ease 0.5s both">MicroClaw is the definition of <strong>AI on
-                Hardware</strong>. It interfaces LLMs directly with the real
-            world through GPIOs, Servos, and Sensors.</p>
+        <p data-parallax="0.15" style="animation: reveal 1s ease 0.5s both">Turn a <strong>$5 ESP32</strong> into a
+            general-purpose AI agent. It reasons, remembers, and controls real hardware — all through natural language
+            powered by <strong>Gemini</strong> or <strong>Groq</strong>.</p>
 
         <div class="cta-group" data-parallax="0.1" style="animation: reveal 1s ease 0.8s both">
             <a href="manual.html#quickstart" class="btn-primary" onmouseover="playSfx('hover')"
@@ -524,21 +524,22 @@
         <div class="grid">
             <div class="card reveal" style="transition-delay:0s" onmouseover="playSfx('hover')">
                 <span class="icon">🧠</span>
-                <h3>Dual-Core Strategy</h3>
-                <p>Why choose one? MicroClaw intelligently switches between <strong>Gemini 1.5 Pro</strong> for complex
-                    reasoning and <strong>Groq</strong> for instant, sub-second responses.</p>
+                <h3>Dual AI Providers</h3>
+                <p>Choose between <strong>Google Gemini Flash</strong> for multimodal reasoning or <strong>Groq (Llama
+                        3)</strong> for ultra-fast, sub-second responses. Switch anytime via the Manager UI.</p>
             </div>
             <div class="card reveal" style="transition-delay:0.15s" onmouseover="playSfx('hover')">
                 <span class="icon">🦾</span>
-                <h3>Physical Intelligence</h3>
-                <p>It creates its own tools. From reading sensors to toggling relays, MicroClaw translates natural
-                    language into direct GPIO manipulation.</p>
+                <h3>Real-World Tool Use</h3>
+                <p>The AI calls built-in tools autonomously: <strong>GPIO control</strong>, <strong>WiFi
+                        scanning</strong>, <strong>BLE scanning</strong>, and <strong>system stats</strong> — then
+                    summarizes the results in plain English.</p>
             </div>
             <div class="card reveal" style="transition-delay:0.3s" onmouseover="playSfx('hover')">
                 <span class="icon">📂</span>
-                <h3>Total Recall</h3>
-                <p>Conversations shouldn't vanish on reboot. MicroClaw maintains a persistent <code>MEMORY.md</code>
-                    ledger locally on the chip's filesystem.</p>
+                <h3>Persistent Memory</h3>
+                <p>Conversations survive reboots. MicroClaw writes its long-term memory to a <code>MEMORY.md</code> file
+                    on the ESP32's LittleFS, and reads it back every time it boots.</p>
             </div>
         </div>
     </section>
@@ -547,17 +548,17 @@
         <h2>What can it do?</h2>
         <div class="use-case-grid">
             <div class="uc-card reveal" style="transition-delay:0s" onmouseover="playSfx('hover')">
-                <h4>Server Monitor</h4>
-                <p>"MicroClaw, watch my API endpoint. If it goes down, wave your arm frantically to alert me."</p>
+                <h4>📡 WiFi Recon</h4>
+                <p>"Scan for nearby WiFi networks and tell me which ones are open."</p>
             </div>
             <div class="uc-card reveal" style="transition-delay:0.15s" onmouseover="playSfx('hover')">
-                <h4>Focus Timer</h4>
-                <p>"Set a timer for 25 minutes. Keep the LED blue while I work, then turn it green when done."</p>
+                <h4>💡 GPIO Control</h4>
+                <p>"Turn on the LED on pin 2" or "Set pin 13 to output HIGH" — the AI executes it directly.</p>
             </div>
             <div class="uc-card reveal" onmouseover="playSfx('hover')">
-                <h4>Desk Companion</h4>
-                <p>"I'm feeling stressed." <br><em>*MicroClaw adjusts the lighting and offers a calming breathing
-                        exercise.*</em></p>
+                <h4>📊 System Health</h4>
+                <p>"How's your memory?" — MicroClaw reports its free heap, CPU frequency, flash size, and uptime in real
+                    time.</p>
             </div>
         </div>
     </section>
