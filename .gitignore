@@ -18,4 +18,25 @@ env/
 
 # MicroClaw Config (User Secrets)
 config.json
-firmware/src/secrets.h
+firmware/include/secrets.h
+
+# Python Distribution
+dist/
+build/
+*.egg-info/
+*.spec
+
+# PyInstaller
+__pycache__/
+*.pyc
+
+# Mac OS
+.DS_Store
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Logs
+*.log
