@@ -18,10 +18,9 @@ public:
         if (!LittleFS.exists(path)) {
             return "";
         }
+        // Use full path just in case
         File file = LittleFS.open(path, "r");
-        if (!file) {
-            return "";
-        }
+        if (!file) return "";
         String content = file.readString();
         file.close();
         return content;
