@@ -481,6 +481,115 @@
             opacity: 1;
             transform: translateY(0);
         }
+
+        /* Showcase Gallery */
+        .showcase-tab {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid #222;
+            color: #888;
+            padding: 10px 24px;
+            border-radius: 100px;
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .showcase-tab.active,
+        .showcase-tab:hover {
+            background: rgba(255, 77, 77, 0.12);
+            border-color: rgba(255, 77, 77, 0.5);
+            color: #fff;
+        }
+
+        .showcase-panel {
+            display: none;
+        }
+
+        .showcase-panel.active {
+            display: block;
+        }
+
+        .screenshot-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+        }
+
+        .screenshot-card {
+            background: #111;
+            border-radius: 16px;
+            border: 1px solid #1a1a1a;
+            overflow: hidden;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .screenshot-card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 12px 40px rgba(255, 77, 77, 0.1);
+        }
+
+        .browser-frame {
+            background: #1a1a1e;
+            padding: 10px 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border-bottom: 1px solid #222;
+        }
+
+        .browser-dots {
+            display: flex;
+            gap: 6px;
+        }
+
+        .browser-dots span {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+
+        .browser-dots span:nth-child(1) {
+            background: #ff5f57;
+        }
+
+        .browser-dots span:nth-child(2) {
+            background: #ffbd2e;
+        }
+
+        .browser-dots span:nth-child(3) {
+            background: #28c840;
+        }
+
+        .browser-url {
+            background: #111;
+            padding: 4px 14px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            color: #555;
+            font-family: 'JetBrains Mono', monospace;
+            flex: 1;
+        }
+
+        .screenshot-card img {
+            width: 100%;
+            display: block;
+        }
+
+        .screenshot-label {
+            padding: 16px 20px 4px;
+            font-weight: 600;
+            font-size: 1rem;
+            color: #fff;
+        }
+
+        .screenshot-desc {
+            padding: 0 20px 20px;
+            font-size: 0.85rem;
+            color: #666;
+            margin: 0;
+            line-height: 1.5;
+        }
     </style>
 </head>
 
@@ -563,6 +672,70 @@
         </div>
     </section>
 
+    <!-- Screenshot Showcase -->
+    <section class="showcase reveal" style="padding: 100px 5%; max-width: 1200px; margin: 0 auto;">
+        <h2 style="text-align:center; font-size:2.5rem; margin-bottom:15px; color:#fff;">See it in Action</h2>
+        <p style="text-align:center; color:#666; margin-bottom:50px; font-size:1.1rem;">Two interfaces, one brain.
+            Manage from your desktop, chat from any device.</p>
+
+        <!-- Tab Nav -->
+        <div style="display:flex; justify-content:center; gap:10px; margin-bottom:40px;" id="showcase-tabs">
+            <button class="showcase-tab active" onclick="showTab('manager')" onmouseover="playSfx('hover')">🖥️
+                MicroClaw Manager</button>
+            <button class="showcase-tab" onclick="showTab('esp32')" onmouseover="playSfx('hover')">💬 ESP32 Web
+                UI</button>
+        </div>
+
+        <!-- Manager Panel -->
+        <div id="tab-manager" class="showcase-panel active">
+            <div class="screenshot-grid">
+                <div class="screenshot-card reveal" style="transition-delay:0s">
+                    <div class="browser-frame">
+                        <div class="browser-dots"><span></span><span></span><span></span></div>
+                        <div class="browser-url">localhost:8000</div>
+                    </div>
+                    <img src="manager_terminal.png" alt="Terminal Monitor" loading="lazy">
+                    <div class="screenshot-label">Terminal Monitor</div>
+                    <p class="screenshot-desc">Real-time serial log streaming with color-coded output</p>
+                </div>
+                <div class="screenshot-card reveal" style="transition-delay:0.15s">
+                    <div class="browser-frame">
+                        <div class="browser-dots"><span></span><span></span><span></span></div>
+                        <div class="browser-url">localhost:8000</div>
+                    </div>
+                    <img src="manager_config.png" alt="Configuration & Flash" loading="lazy">
+                    <div class="screenshot-label">Configuration & Flash</div>
+                    <p class="screenshot-desc">WiFi credentials, API keys, and one-click firmware upload</p>
+                </div>
+                <div class="screenshot-card reveal" style="transition-delay:0.3s">
+                    <div class="browser-frame">
+                        <div class="browser-dots"><span></span><span></span><span></span></div>
+                        <div class="browser-url">localhost:8000</div>
+                    </div>
+                    <img src="manager_flash.png" alt="Build & Flash" loading="lazy">
+                    <div class="screenshot-label">Build & Flash</div>
+                    <p class="screenshot-desc">PlatformIO build + esptool flash — all from the browser</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ESP32 Panel -->
+        <div id="tab-esp32" class="showcase-panel">
+            <div class="screenshot-grid" style="grid-template-columns: 1fr;">
+                <div class="screenshot-card reveal" style="max-width:800px; margin:0 auto;">
+                    <div class="browser-frame">
+                        <div class="browser-dots"><span></span><span></span><span></span></div>
+                        <div class="browser-url">192.168.x.x</div>
+                    </div>
+                    <img src="chat_demo.png" alt="ESP32 AI Chat" loading="lazy">
+                    <div class="screenshot-label">On-Device AI Chat</div>
+                    <p class="screenshot-desc">Chat interface served directly from the ESP32 — system stats, GPIO
+                        control, and AI reasoning in real time</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
     <footer>
         <p>Built with ❤️ by <strong>Abhimanyu Singh</strong>.<br>
             <a href="https://github.com/abhimanyus1997" target="_blank"
@@ -617,6 +790,15 @@
                 osc.start(now);
                 osc.stop(now + 1.5);
             }
+        }
+
+        // Showcase Tab Switcher
+        function showTab(tab) {
+            document.querySelectorAll('.showcase-panel').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.showcase-tab').forEach(t => t.classList.remove('active'));
+            document.getElementById('tab-' + tab).classList.add('active');
+            event.target.classList.add('active');
+            playSfx('click');
         }
 
         // Auto-boot sound on first interaction
