@@ -250,8 +250,8 @@
         <a href="#ai">🧠 AI Capabilities</a>
         <a href="#api">📡 API Reference</a>
         <div class="divider"></div>
-        <a href="https://github.com/yourusername/microclaw" target="_blank">GitHub</a>
-        <div class="version">v2.1.0</div>
+        <a href="https://github.com/abhimanyus1997/microclaw" target="_blank">GitHub</a>
+        <div class="version">v1.0 Alpha</div>
     </nav>
 
     <main>
@@ -259,25 +259,26 @@
 
             <section id="intro">
                 <h1>The Physical AI Agent</h1>
-                <p class="tagline">MicroClaw transforms a generic ESP32 into a self-aware, physical agent powered by
-                    LLMs.</p>
+                <p class="tagline">MicroClaw transforms a $5 ESP32 into a general-purpose AI agent that reasons,
+                    remembers, and controls real hardware through natural language.</p>
 
                 <div class="grid">
                     <div class="card">
                         <span class="icon">🧠</span>
-                        <h4>Gemini & Groq Inside</h4>
-                        <p>Switch between Gemini 1.5 Flash (Multimodal) and Llama 3 on Groq (Ultra-fast) instantly.</p>
+                        <h4>Dual AI Providers</h4>
+                        <p>Switch between Google Gemini Flash (Multimodal) and Groq Llama 3 (Ultra-fast) via the Manager
+                            UI.</p>
                     </div>
                     <div class="card">
                         <span class="icon">🛠️</span>
-                        <h4>Tool Use</h4>
-                        <p>The AI can use "Tools" to control servos, read sensors, and manage GPIO pins autonomously.
-                        </p>
+                        <h4>Hardware Tool Use</h4>
+                        <p>The AI calls built-in tools autonomously: GPIO control, WiFi scanning, BLE scanning, and
+                            system monitoring.</p>
                     </div>
                     <div class="card">
                         <span class="icon">💾</span>
-                        <h4>Long-Term Memory</h4>
-                        <p>Remembers user details and context across reboots using persistent file storage.</p>
+                        <h4>Persistent Memory</h4>
+                        <p>Remembers context across reboots using LittleFS file storage (<code>MEMORY.md</code>).</p>
                     </div>
                 </div>
             </section>
@@ -286,24 +287,32 @@
                 <h2>⚡ Quick Start</h2>
                 <p>Follow these steps to get your agent running in minutes.</p>
 
-                <h3>1. Installation</h3>
-                <p>Install dependencies using <code>uv</code> (recommended) or pip.</p>
+                <h3>1. Install Dependencies</h3>
+                <p>Requires Python 3.10+. We recommend <code>uv</code> for speed.</p>
                 <pre><code>uv pip install -r tools/requirements.txt</code></pre>
 
-                <h3>2. Setup & Flash</h3>
-                <p>Launch the manager to configure credentials and flash the firmware.</p>
-                <pre><code>python tools/microclaw.py setup</code></pre>
+                <h3>2. Launch the MicroClaw Manager</h3>
+                <p>The Manager handles configuration, firmware flashing, and serial monitoring.</p>
+                <pre><code>python main.py
+# or with uv:
+uv run main.py</code></pre>
+                <p>Open <a href="http://localhost:8000" style="color:var(--accent)">http://localhost:8000</a> in your
+                    browser.</p>
 
-                <h3>3. Launch Dashboard</h3>
-                <p>Start the local manufacturing dashboard.</p>
-                <pre><code>python main.py</code></pre>
-                <p>Open <a href="http://localhost:8000" style="color:var(--accent)">http://localhost:8000</a> to chat
-                    with your agent.</p>
+                <h3>3. Setup & Flash</h3>
+                <p>In the Manager web UI:</p>
+                <ul style="color:var(--text-secondary); line-height:2">
+                    <li>Go to the <strong>Setup Tab</strong> and enter your WiFi credentials + API keys (Gemini or
+                        Groq).</li>
+                    <li>Click <strong>Build & Flash</strong> to compile and upload firmware to your ESP32.</li>
+                    <li>Switch to the <strong>Monitor Tab</strong> to see serial logs and chat with your AI agent.</li>
+                </ul>
             </section>
 
             <section id="hardware">
-                <h2>🔌 Hardware & Wiring</h2>
-                <p>Connect your components as follows. The system is designed for ESP32 Development Boards.</p>
+                <h2>🔌 Hardware</h2>
+                <p>MicroClaw runs on any ESP32 development board. No additional wiring is required for basic AI
+                    features.</p>
 
                 <table>
                     <thead>
@@ -315,65 +324,80 @@
                     </thead>
                     <tbody>
                         <tr>
-                            <td><strong>Servo</strong> (Signal)</td>
-                            <td><code>GPIO 18</code></td>
-                            <td>PWM Control</td>
-                        </tr>
-                        <tr>
-                            <td><strong>Servo</strong> (VCC)</td>
-                            <td><code>VIN</code> / <code>5V</code></td>
-                            <td>Do not use 3.3V</td>
-                        </tr>
-                        <tr>
-                            <td><strong>Servo</strong> (GND)</td>
-                            <td><code>GND</code></td>
-                            <td>Common Ground</td>
-                        </tr>
-                        <tr>
                             <td><strong>Built-in LED</strong></td>
                             <td><code>GPIO 2</code></td>
-                            <td>Status Indicator</td>
+                            <td>Status Indicator (AI-controllable)</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Any GPIO</strong></td>
+                            <td><code>GPIO 0-39</code></td>
+                            <td>AI can set any pin as input/output</td>
+                        </tr>
+                        <tr>
+                            <td><strong>WiFi</strong></td>
+                            <td>Built-in</td>
+                            <td>2.4GHz, used for AI API calls & web UI</td>
+                        </tr>
+                        <tr>
+                            <td><strong>BLE</strong></td>
+                            <td>Built-in</td>
+                            <td>Bluetooth Low Energy scanning</td>
                         </tr>
                     </tbody>
                 </table>
+                <p>Connect external components (LEDs, relays, sensors) to any available GPIO pin and control them via
+                    natural language.</p>
             </section>
 
             <section id="ai">
                 <h2>🧠 AI Capabilities</h2>
-                <p>MicroClaw is "Self-Aware" thanks to Function Calling tools defined in the firmware.</p>
+                <p>MicroClaw uses a recursive reasoning loop: the AI calls a tool, receives the hardware result, then
+                    generates a human-friendly summary in a second LLM call.</p>
 
                 <h3>Available Tools</h3>
-                <ul>
-                    <li><code>claw_control({action: "OPEN"|"CLOSE"|"WAVE"})</code> - Move the servo.</li>
-                    <li><code>gpio_control({pin: int, mode: "output", state: 0|1})</code> - Control any pin.</li>
-                    <li><code>get_system_stats()</code> - Read Free Heap, CPU Freq, Flash Size.</li>
-                    <li><code>memory_write({content: "..."})</code> - Save facts to permanent storage.</li>
+                <ul style="color:var(--text-secondary); line-height:2">
+                    <li><code>gpio_control({pin: int, mode: "input"|"output", state: 0|1})</code> — Control any GPIO
+                        pin.</li>
+                    <li><code>get_system_stats()</code> — Read free heap, CPU frequency, flash size, and uptime.</li>
+                    <li><code>wifi_scan()</code> — Scan for nearby WiFi networks and return SSIDs, signal strength, and
+                        encryption.</li>
+                    <li><code>ble_scan()</code> — Scan for nearby Bluetooth Low Energy devices.</li>
+                    <li><code>memory_write({content: "..."})</code> — Save facts to persistent LittleFS storage.</li>
+                    <li><code>memory_read()</code> — Retrieve long-term memory contents.</li>
                 </ul>
 
                 <h3>Example Prompt Interactions</h3>
-                <p><em>"Open the claw!"</em> → Calls <code>claw_control(OPEN)</code>.</p>
-                <p><em>"How much memory do you have?"</em> → Calls <code>get_system_stats()</code>.</p>
-                <p><em>"Turn on the light on pin 4"</em> → Calls <code>gpio_control(4, output, 1)</code>.</p>
+                <p><em>"Scan for WiFi networks"</em> → Calls <code>wifi_scan()</code>, then summarizes results in plain
+                    English.</p>
+                <p><em>"How much memory do you have?"</em> → Calls <code>get_system_stats()</code>, reports free heap
+                    and CPU info.</p>
+                <p><em>"Turn on the LED on pin 2"</em> → Calls <code>gpio_control(2, "output", 1)</code>.</p>
+                <p><em>"Remember that my name is Abhimanyu"</em> → Calls <code>memory_write()</code>, persists across
+                    reboots.</p>
             </section>
 
             <section id="api">
                 <h2>📡 API Reference</h2>
-                <p>Control MicroClaw programmatically via the <code>microclaw.py</code> server.</p>
+                <p>The ESP32 hosts a web server. You can interact with it programmatically.</p>
 
                 <div class="card">
                     <h4>POST /api/chat</h4>
-                    <p>Send a message to the agent.</p>
+                    <p>Send a message to the AI agent. Optionally include chat history for context.</p>
                     <pre><code>{
-  "text": "Hello Microclaw!",
-  "provider": "groq" // optional
+  "text": "Scan for WiFi networks",
+  "history": []  // optional, last N messages
 }</code></pre>
                 </div>
 
                 <div class="card" style="margin-top:20px;">
-                    <h4>POST /api/flash</h4>
-                    <p>Upload and flash a new firmware binary.</p>
-                    <pre><code>curl -X POST -F "file=@firmware.bin" -F "port=/dev/ttyUSB0" \
-  http://localhost:8000/api/flash</code></pre>
+                    <h4>Response Format</h4>
+                    <p>The agent returns structured JSON with reasoning data.</p>
+                    <pre><code>{
+  "reply": "I found 5 networks nearby...",
+  "thought": "User wants WiFi info",
+  "tool": "wifi_scan",
+  "tool_result": "{...raw scan data...}"
+}</code></pre>
                 </div>
             </section>
 
