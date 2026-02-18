@@ -1,11 +1,9 @@
-#include <Arduino.h>
+#include "common.h"
 #include "secrets.h"
-#include "file_system.h"
 #include "config_manager.h"
 #include "wifi_manager.h"
 #include "gemini_client.h"
 #include "groq_client.h" // Added Groq
-#include "claw_controller.h"
 #include "cli.h"
 #include "telegram_bot.h"
 #include "tools.h"
@@ -17,10 +15,6 @@
  * Email: abhimanyus1997@gmail.com
  */
 
-// Configuration
-const int CLAW_SERVO_PIN = 18; 
-const char* DEVICE_HOSTNAME = "microclaw";
-
 // Global Objects
 FileSystem fsManager;
 ConfigManager config;
@@ -31,24 +25,51 @@ WifiManager* wifi = nullptr;
 GeminiClient* gemini = nullptr;
 GroqClient* groq = nullptr;
 TelegramBot* bot = nullptr;
-ClawController claw(CLAW_SERVO_PIN);
 Tools* tools = nullptr;
 WebInterface* webServer = nullptr;
 
 // Unified Agent Logic
-String handleAgentRequest(String userText) {
-    Serial.print("User: ");
+String handleAgentRequest(String userText, JsonArray history = JsonArray(), int depth = 0) {
+    if (depth > 5) return "{\"reply\":\"Too much recursion!\"}";
+    
+    Serial.print("User (D");
+    Serial.print(depth);
+    Serial.print("): ");
     Serial.println(userText);
 
     // Construct Context from Memory
     String memory = fsManager.readFile("/MEMORY.md");
-    String contextPrompt = "You are MicroClaw, a physical AI assistant created by Abhimanyu Singh. ";
+    String contextPrompt = "You are MicroClaw, a physical AI assistant running on an ESP32, created by Abhimanyu Singh. ";
+    contextPrompt += "You can interact with hardware via GPIOs, scan WiFi, and manage system stats. ";
     if (memory.length() > 0) {
-        contextPrompt += "Your memory: " + memory + ". ";
+        contextPrompt += "Your memory (long-term): " + memory + ". ";
     }
-    contextPrompt += "User says: " + userText + ". ";
+    
+    if (!history.isNull() && history.size() > 0) {
+        contextPrompt += "Recent conversation history (short-term): ";
+        for (JsonVariant m : history) {
+            String s = m["sender"].as<String>();
+            String t = m["text"].as<String>();
+            String tool_res = m["tool_result"].as<String>();
+            
+            contextPrompt += (s == "user" ? "User: " : "AI: ") + t;
+            if (tool_res.length() > 0 && tool_res != "null") {
+                contextPrompt += " [Tool Result: " + tool_res + "]";
+            }
+            contextPrompt += " | ";
+        }
+    }
+    
+    if (depth > 0) {
+        contextPrompt += "SYSTEM: The tool you called returned: " + userText + ". ";
+        contextPrompt += "Based on this hardware data, provide your final friendly reply to the user. Set tool to 'none'.";
+    } else {
+        contextPrompt += "Current User message: " + userText + ". ";
+    }
+
     contextPrompt += "Respond with a JSON object: {\"thought\": \"...\", \"tool\": \"tool_name\", \"args\": { ... }, \"reply\": \"...\"}. ";
-    contextPrompt += "Valid tools: 'claw_control' {action: 'OPEN'|'CLOSE'|'WAVE'}, 'memory_write' {content: '...'}, 'memory_read' {}. If no tool needed, set tool to 'none'.";
+    contextPrompt += "Valid tools: 'get_system_stats' {}, 'gpio_control' {pin: int, mode: 'input'|'output', state: 0|1}, 'wifi_scan' {}, 'memory_write' {content: '...'}, 'memory_read' {}. If no tool needed, set tool to 'none'. ";
+    contextPrompt += "IMPORTANT: If you use a tool, you must still provide a friendly 'reply' explaining what you are doing (e.g. 'Checking stats for you now...'). The user will see your reply AND the tool output separately.";
 
     // Call AI Provider
     String response;
@@ -72,25 +93,53 @@ String handleAgentRequest(String userText) {
         if (doc.containsKey("error")) {
             String errorMsg = doc["error"].as<String>();
             Serial.println("AI Error: " + errorMsg);
-            return "I'm having trouble thinking right now. (" + errorMsg + ")";
+            return "{\"reply\":\"I'm having trouble thinking right now. (" + errorMsg + ")\"}";
         }
 
         const char* reply = doc["reply"];
+        const char* thought = doc["thought"];
         const char* tool = doc["tool"];
         
         String toolResult = "";
-        if (tool && String(tool) != "none") {
-                toolResult = tools->execute(String(tool), doc["args"]);
-                Serial.println("Tool Result: " + toolResult);
+        if (tool && String(tool) != "none" && depth == 0) {
+            toolResult = tools->execute(String(tool), doc["args"]);
+            Serial.println("Tool Result: " + toolResult);
+            
+            // SECOND CALL (Follow-up)
+            String secondResponse = handleAgentRequest(toolResult, history, depth + 1);
+            
+            // Extract the final reply from the second call
+            DynamicJsonDocument secondDoc(4096);
+            DeserializationError err = deserializeJson(secondDoc, secondResponse);
+            
+            const char* finalTxt = "I executed the tool but had trouble summarizing the result.";
+            if (!err && secondDoc.containsKey("reply")) {
+                finalTxt = secondDoc["reply"];
+            }
+
+            DynamicJsonDocument outDoc(4096);
+            outDoc["reply"] = finalTxt;
+            outDoc["thought"] = thought; // Keep original thought
+            outDoc["tool"] = tool;
+            outDoc["tool_result"] = toolResult;
+            
+            String output;
+            serializeJson(outDoc, output);
+            return output;
         }
 
-        String finalReply = String(reply);
-        if (toolResult != "") {
-            finalReply += "\n[Tool: " + toolResult + "]";
-        }
-        return finalReply;
+        // Return structured JSON for the Web UI (Base case or Depth > 0)
+        DynamicJsonDocument outDoc(4096);
+        outDoc["reply"] = reply;
+        outDoc["thought"] = thought;
+        outDoc["tool"] = (tool && String(tool) != "none") ? tool : "";
+        outDoc["tool_result"] = toolResult;
+        
+        String output;
+        serializeJson(outDoc, output);
+        return output;
     } else {
-        return "Error parsing my own thought... " + response;
+        return "{\"reply\":\"Error parsing my own thought: " + response + "\"}";
     }
 }
 
@@ -100,8 +149,11 @@ void setup() {
     Serial.println("\n\n--- MicroClaw Firmware Starting ---");
     Serial.println("Author: Abhimanyu Singh (abhimanyus1997@gmail.com)");
     
-    // Initialize File System
+    // Initialize File System (auto-format if failed)
     fsManager.begin();
+    if (!LittleFS.exists("/MEMORY.md")) {
+        fsManager.writeFile("/MEMORY.md", "MicroClaw Memory initialized.\n");
+    }
     
     // Initialize Config
     config.begin();
@@ -122,8 +174,7 @@ void setup() {
         Serial.println("Telegram Bot Disabled (No Token)");
     }
 
-    claw.begin();
-    tools = new Tools(&claw);
+    tools = new Tools();
     
     // Initialize Web Server
     webServer = new WebInterface();
@@ -132,8 +183,12 @@ void setup() {
     wifi->connect();
 
     // Bind agent logic to web server & Start
-    webServer->begin([](String text) -> String {
-        return handleAgentRequest(text);
+    webServer->begin([](String body) -> String {
+        DynamicJsonDocument doc(4096);
+        deserializeJson(doc, body);
+        String text = doc["text"].as<String>();
+        JsonArray history = doc["history"].as<JsonArray>();
+        return handleAgentRequest(text, history);
     });
 
     Serial.println("Ready! CLI available.");
