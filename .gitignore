@@ -8,3 +8,14 @@ wheels/
 
 # Virtual environments
 .venv
+venv/
+env/
+
+# PlatformIO
+.pio
+.pioenvs
+.piolibdeps
+
+# MicroClaw Config (User Secrets)
+config.json
+firmware/src/secrets.h

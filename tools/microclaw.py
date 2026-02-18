@@ -11,18 +11,45 @@ def list_ports():
     return [port.device for port in ports]
 
 def select_port():
-    ports = list_ports()
-    if not ports:
+    ports = serial.tools.list_ports.comports()
+    
+    # Filter out likely irrelevant ports (standard PC serial ports)
+    # On Linux, these are usually ttyS* which are rarely the ESP32
+    candidates = []
+    for p in ports:
+        # Keep it if it's NOT ttyS* OR if we are not on linux
+        if not (sys.platform.startswith("linux") and "ttyS" in p.device):
+            candidates.append(p)
+            
+    # If we filtered everything out, revert to showing everything
+    if not candidates and ports:
+        candidates = ports
+
+    if not candidates:
         print("No serial ports found!")
         return None
+
+    # If only one candidate found, auto-select it
+    if len(candidates) == 1:
+        print(f"Auto-selected port: {candidates[0].device} ({candidates[0].description})")
+        return candidates[0].device
     
-    print("Available ports:")
-    for i, port in enumerate(ports):
-        print(f"[{i}] {port}")
+    print("\nAvailable ports:")
+    for i, port in enumerate(candidates):
+        print(f"[{i}] {port.device} - {port.description}")
     
     try:
-        selection = int(input("Select port number: "))
-        return ports[selection]
+        selection_input = input("\nSelect port number: ")
+        if not selection_input.strip(): # Default to 0 if enter pressed
+             print(f"Selected: {candidates[0].device}")
+             return candidates[0].device
+             
+        selection = int(selection_input)
+        if 0 <= selection < len(candidates):
+            return candidates[selection].device
+        else:
+            print("Invalid selection.")
+            return None
     except (ValueError, IndexError):
         print("Invalid selection.")
         return None
