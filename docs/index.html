@@ -354,8 +354,8 @@
             position: fixed;
             top: 0;
             left: 0;
-            width: 100%;
-            height: 100%;
+            width: 100vw;
+            height: 100vh;
             background: rgba(5, 5, 5, 0.96);
             backdrop-filter: blur(20px);
             z-index: 999;
@@ -871,14 +871,14 @@
         <button class="hamburger" onclick="toggleMobileNav()" aria-label="Menu">
             <span></span><span></span><span></span>
         </button>
-
-        <!-- Mobile Nav Overlay -->
-        <div class="mobile-overlay" id="mobileNav">
-            <a href="manual.html" onclick="toggleMobileNav()">📖 Documentation</a>
-            <a href="https://github.com/abhimanyus1997/microclaw" onclick="toggleMobileNav()">🐙 GitHub</a>
-            <a href="manual.html#quickstart" onclick="toggleMobileNav()" style="color:var(--primary)">🚀 Get Started</a>
-        </div>
     </nav>
+
+    <!-- Mobile Nav Overlay (outside nav to avoid height constraints) -->
+    <div class="mobile-overlay" id="mobileNav">
+        <a href="manual.html" onclick="toggleMobileNav()">📖 Documentation</a>
+        <a href="https://github.com/abhimanyus1997/microclaw" onclick="toggleMobileNav()">🐙 GitHub</a>
+        <a href="manual.html#quickstart" onclick="toggleMobileNav()" style="color:var(--primary)">🚀 Get Started</a>
+    </div>
 
     <div class="hero" id="hero">
         <div class="badge-new" style="animation: reveal 0.8s ease 0.2s both">v1.0 Alpha</div>
