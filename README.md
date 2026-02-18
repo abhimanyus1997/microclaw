@@ -58,6 +58,15 @@ The **MicroClaw Manager** is a Python-based web UI for setup and monitoring:
 - **Smart Control**: Restart device, scan Wi-Fis, and send commands.
 - **Secure Config**: Set API keys without editing code.
 
+<div align="center">
+
+| Terminal Monitor | Configuration & Flash | Build & Flash |
+|:---:|:---:|:---:|
+| <img src="docs/manager_terminal.png" width="280"> | <img src="docs/manager_config.png" width="280"> | <img src="docs/manager_flash.png" width="280"> |
+| *Serial monitor with live logs* | *WiFi, API keys & firmware setup* | *One-click build & OTA flash* |
+
+</div>
+
 ## 💬 ESP32 Web UI (On-Device)
 
 The ESP32 hosts its own web server for direct AI chat over your local network:
