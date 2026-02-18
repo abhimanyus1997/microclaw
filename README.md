@@ -58,6 +58,11 @@ The new **MicroClaw Manager** features a professional, space-themed interface:
 - **Smart Control**: Restart device, scan Wi-Fis, and send commands.
 - **Secure Config**: Set API keys without editing code.
 
+<div align="center">
+<img src="docs/chat_demo.png" alt="MicroClaw AI Chat Demo" width="800">
+<p><em>AI Chat — system stats reporting and GPIO control via natural language.</em></p>
+</div>
+
 ## 🛠️ Hardware
 
 - **ESP32 Development Board** (ESP32-WROOM-32 / DevKit V1)
