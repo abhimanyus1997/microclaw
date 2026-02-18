@@ -808,6 +808,16 @@
             <a href="manual.html#quickstart" class="btn-small" onmouseover="playSfx('hover')"
                 onclick="playSfx('click')">Get Started</a>
         </div>
+        <button class="hamburger" onclick="toggleMobileNav()" aria-label="Menu">
+            <span></span><span></span><span></span>
+        </button>
+
+        <!-- Mobile Nav Overlay -->
+        <div class="mobile-overlay" id="mobileNav">
+            <a href="manual.html" onclick="toggleMobileNav()">📖 Documentation</a>
+            <a href="https://github.com/abhimanyus1997/microclaw" onclick="toggleMobileNav()">🐙 GitHub</a>
+            <a href="manual.html#quickstart" onclick="toggleMobileNav()" style="color:var(--primary)">🚀 Get Started</a>
+        </div>
     </nav>
 
     <div class="hero" id="hero">

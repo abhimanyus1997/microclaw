@@ -393,6 +393,172 @@
         ::-webkit-scrollbar-thumb:hover {
             background: var(--text-secondary);
         }
+
+        /* Assistant Panel */
+        .assistant-toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 16px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            margin-bottom: 15px;
+        }
+
+        .toggle-switch {
+            position: relative;
+            width: 44px;
+            height: 24px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: var(--border);
+            border-radius: 24px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .toggle-slider::before {
+            content: '';
+            position: absolute;
+            width: 18px;
+            height: 18px;
+            left: 3px;
+            bottom: 3px;
+            background: #fff;
+            border-radius: 50%;
+            transition: 0.3s;
+        }
+
+        .toggle-switch input:checked+.toggle-slider {
+            background: var(--accent);
+        }
+
+        .toggle-switch input:checked+.toggle-slider::before {
+            transform: translateX(20px);
+        }
+
+        .assistant-messages {
+            height: 450px;
+            overflow-y: auto;
+            padding: 20px;
+            background: var(--bg-dark);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .chat-msg {
+            display: flex;
+            max-width: 85%;
+        }
+
+        .chat-msg.user {
+            align-self: flex-end;
+            flex-direction: row-reverse;
+        }
+
+        .chat-msg.assistant {
+            align-self: flex-start;
+        }
+
+        .chat-bubble {
+            padding: 12px 16px;
+            border-radius: 16px;
+            font-size: 0.92rem;
+            line-height: 1.6;
+            word-wrap: break-word;
+            white-space: pre-wrap;
+        }
+
+        .chat-msg.user .chat-bubble {
+            background: var(--accent);
+            color: #fff;
+            border-bottom-right-radius: 4px;
+        }
+
+        .chat-msg.assistant .chat-bubble {
+            background: var(--bg-card);
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+            border-bottom-left-radius: 4px;
+        }
+
+        .typing-indicator {
+            display: flex;
+            gap: 4px;
+            padding: 12px 16px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            border-bottom-left-radius: 4px;
+            align-self: flex-start;
+        }
+
+        .typing-indicator span {
+            width: 7px;
+            height: 7px;
+            background: var(--text-secondary);
+            border-radius: 50%;
+            animation: typingBounce 1.4s infinite;
+        }
+
+        .typing-indicator span:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .typing-indicator span:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes typingBounce {
+
+            0%,
+            60%,
+            100% {
+                transform: translateY(0);
+            }
+
+            30% {
+                transform: translateY(-6px);
+            }
+        }
+
+        .assistant-input-bar {
+            display: flex;
+            gap: 10px;
+            margin-top: 12px;
+        }
+
+        .assistant-input-bar input {
+            flex: 1;
+            padding: 12px 16px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            color: var(--text-primary);
+            font-size: 0.95rem;
+            font-family: inherit;
+        }
+
+        .assistant-input-bar input:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
     </style>
 </head>
 
@@ -430,6 +596,7 @@
         <div class="nav-tabs">
             <div class="nav-tab active" onclick="switchTab('monitor')">Terminal Monitor</div>
             <div class="nav-tab" onclick="switchTab('setup')">Configuration & Flash</div>
+            <div class="nav-tab" onclick="switchTab('assistant')">🤖 Assistant</div>
         </div>
 
         <!-- Monitor Panel -->
@@ -565,6 +732,50 @@
                             onchange="updateFileName(this)">
                     </div>
                     <button class="btn-danger" onclick="flashFirmware()">Flash Binary</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Assistant Panel -->
+        <div id="assistant" class="panel">
+            <div class="assistant-toolbar">
+                <div style="display:flex; align-items:center; gap:12px;">
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="assistant-toggle" checked onchange="toggleAssistant()">
+                        <span class="toggle-slider"></span>
+                    </label>
+                    <span id="assistant-status-text"
+                        style="font-size:0.85rem; color:var(--text-secondary);">Active</span>
+                </div>
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <select id="assistant-provider" onchange="switchAssistantProvider()"
+                        style="padding:6px 12px; font-size:0.85rem;">
+                        <option value="gemini">Gemini</option>
+                        <option value="groq">Groq</option>
+                    </select>
+                    <button class="btn-icon" onclick="clearAssistantChat()" title="Clear Chat"
+                        style="font-size:0.9rem;">🗑️</button>
+                </div>
+            </div>
+
+            <div id="assistant-disabled-overlay"
+                style="display:none; text-align:center; padding:80px 20px; color:var(--text-secondary);">
+                <div style="font-size:3rem; margin-bottom:15px;">🤖</div>
+                <h3 style="color:var(--text-secondary); margin-bottom:8px;">Assistant Disabled</h3>
+                <p style="font-size:0.9rem;">Toggle the switch above to enable the AI assistant</p>
+            </div>
+
+            <div id="assistant-chat-wrap">
+                <div id="assistant-messages" class="assistant-messages">
+                    <div class="chat-msg assistant">
+                        <div class="chat-bubble">👋 Hi! I'm your MicroClaw assistant. Ask me anything about setup,
+                            troubleshooting, or general questions.</div>
+                    </div>
+                </div>
+                <div class="assistant-input-bar">
+                    <input type="text" id="assistant-input" placeholder="Ask anything..."
+                        onkeypress="if(event.key==='Enter')sendAssistantMsg()">
+                    <button class="btn-primary" onclick="sendAssistantMsg()" id="assistant-send-btn">Send</button>
                 </div>
             </div>
         </div>
@@ -995,6 +1206,136 @@
             statusText.textContent = "Disconnected (Flashing/Reboot)";
             statusText.style.color = "var(--warning)";
         }
+
+        // ── Assistant Functions ──────────────────────────────────────────────
+        let assistantEnabled = true;
+
+        async function sendAssistantMsg() {
+            if (!assistantEnabled) return;
+            const input = document.getElementById('assistant-input');
+            const msg = input.value.trim();
+            if (!msg) return;
+            input.value = '';
+
+            const container = document.getElementById('assistant-messages');
+
+            // Add user bubble
+            const userDiv = document.createElement('div');
+            userDiv.className = 'chat-msg user';
+            userDiv.innerHTML = `<div class="chat-bubble">${escapeHtml(msg)}</div>`;
+            container.appendChild(userDiv);
+
+            // Typing indicator
+            const typing = document.createElement('div');
+            typing.className = 'typing-indicator';
+            typing.innerHTML = '<span></span><span></span><span></span>';
+            container.appendChild(typing);
+            container.scrollTop = container.scrollHeight;
+
+            // Disable input while waiting
+            input.disabled = true;
+            document.getElementById('assistant-send-btn').disabled = true;
+
+            try {
+                const res = await fetch('/api/assistant', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: msg })
+                });
+                const data = await res.json();
+
+                typing.remove();
+
+                if (res.ok) {
+                    const aiDiv = document.createElement('div');
+                    aiDiv.className = 'chat-msg assistant';
+                    aiDiv.innerHTML = `<div class="chat-bubble">${formatMarkdown(data.reply)}</div>`;
+                    container.appendChild(aiDiv);
+                } else {
+                    const errDiv = document.createElement('div');
+                    errDiv.className = 'chat-msg assistant';
+                    errDiv.innerHTML = `<div class="chat-bubble" style="border-color:var(--error); color:var(--error);">⚠️ ${escapeHtml(data.error || 'Unknown error')}</div>`;
+                    container.appendChild(errDiv);
+                }
+            } catch (e) {
+                typing.remove();
+                const errDiv = document.createElement('div');
+                errDiv.className = 'chat-msg assistant';
+                errDiv.innerHTML = `<div class="chat-bubble" style="border-color:var(--error); color:var(--error);">⚠️ Network error: ${escapeHtml(e.message)}</div>`;
+                container.appendChild(errDiv);
+            } finally {
+                input.disabled = false;
+                document.getElementById('assistant-send-btn').disabled = false;
+                input.focus();
+                container.scrollTop = container.scrollHeight;
+            }
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function formatMarkdown(text) {
+            // Basic markdown: bold, italic, code blocks, inline code, line breaks
+            let html = escapeHtml(text);
+            html = html.replace(/```([\s\S]*?)```/g, '<pre style="background:var(--bg-dark);padding:10px;border-radius:6px;overflow-x:auto;margin:8px 0;font-family:JetBrains Mono,monospace;font-size:0.85rem;">$1</pre>');
+            html = html.replace(/`([^`]+)`/g, '<code style="background:rgba(255,107,107,0.15);padding:2px 6px;border-radius:4px;font-family:JetBrains Mono,monospace;font-size:0.88em;">$1</code>');
+            html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+            html = html.replace(/\*(.+?)\*/g, '<em>$1</em>');
+            html = html.replace(/\n/g, '<br>');
+            return html;
+        }
+
+        async function toggleAssistant() {
+            const toggle = document.getElementById('assistant-toggle');
+            assistantEnabled = toggle.checked;
+
+            await fetch('/api/assistant/config', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ enabled: assistantEnabled })
+            });
+
+            document.getElementById('assistant-status-text').textContent = assistantEnabled ? 'Active' : 'Disabled';
+            document.getElementById('assistant-disabled-overlay').style.display = assistantEnabled ? 'none' : 'block';
+            document.getElementById('assistant-chat-wrap').style.display = assistantEnabled ? 'block' : 'none';
+        }
+
+        async function switchAssistantProvider() {
+            const provider = document.getElementById('assistant-provider').value;
+            await fetch('/api/assistant/config', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ provider })
+            });
+
+            // Clear chat UI on provider switch
+            const container = document.getElementById('assistant-messages');
+            container.innerHTML = `<div class="chat-msg assistant"><div class="chat-bubble">🔄 Switched to <strong>${provider === 'gemini' ? 'Google Gemini' : 'Groq'}</strong>. How can I help?</div></div>`;
+        }
+
+        async function clearAssistantChat() {
+            await fetch('/api/assistant/clear', { method: 'POST' });
+            const container = document.getElementById('assistant-messages');
+            container.innerHTML = `<div class="chat-msg assistant"><div class="chat-bubble">👋 Chat cleared. Ask me anything!</div></div>`;
+        }
+
+        // Load assistant config on page load
+        async function loadAssistantConfig() {
+            try {
+                const res = await fetch('/api/assistant/config');
+                const data = await res.json();
+                assistantEnabled = data.enabled;
+                document.getElementById('assistant-toggle').checked = assistantEnabled;
+                document.getElementById('assistant-provider').value = data.provider;
+                document.getElementById('assistant-status-text').textContent = assistantEnabled ? 'Active' : 'Disabled';
+                document.getElementById('assistant-disabled-overlay').style.display = assistantEnabled ? 'none' : 'block';
+                document.getElementById('assistant-chat-wrap').style.display = assistantEnabled ? 'block' : 'none';
+            } catch (e) { console.error('Failed to load assistant config', e); }
+        }
+        loadAssistantConfig();
     </script>
 </body>
 

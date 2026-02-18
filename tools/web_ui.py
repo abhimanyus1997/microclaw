@@ -359,6 +359,164 @@ async def build_and_flash(port: str = Form(...)):
     finally:
         flashing_in_progress = False
 
+# ── AI Assistant ──────────────────────────────────────────────────────────────
+import urllib.request
+import urllib.error
+
+ASSISTANT_SYSTEM_PROMPT = """You are MicroClaw Assistant — a helpful AI built into the MicroClaw Manager desktop application.
+
+MicroClaw is an ESP32-based Physical AI Agent that uses Google Gemini or Groq LLMs to interact with hardware.
+Key knowledge:
+- Config file (config.json): wifi_ssid, wifi_password, gemini_key, gemini_model, groq_key, groq_model
+- Firmware is built with PlatformIO (pio run -d firmware) and flashed via esptool
+- The ESP32 runs a web UI at its IP for AI chat, and exposes tools: wifi_scan, ble_scan, gpio_set, gpio_read, memory_write, memory_read
+- The Manager (this app) monitors serial output, configures WiFi/API keys, and can build+flash firmware
+- Quick start: plug in ESP32 → connect in Manager → set WiFi + API key → flash → device reboots and joins WiFi
+
+You can answer any question — about MicroClaw setup, troubleshooting, general programming, or anything else.
+Be concise but thorough. Format responses with markdown when helpful."""
+
+assistant_history = []  # In-memory chat history for context
+
+def _load_config():
+    """Load config.json"""
+    config_path = "config.json"
+    if os.path.exists(config_path):
+        with open(config_path, "r") as f:
+            return json.load(f)
+    return {}
+
+def _save_config(config):
+    """Save config.json"""
+    with open("config.json", "w") as f:
+        json.dump(config, f, indent=4)
+
+def _call_gemini(api_key: str, model: str, messages: list) -> str:
+    """Call Gemini API via REST"""
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}"
+    
+    # Build Gemini contents format
+    contents = []
+    for msg in messages:
+        role = "user" if msg["role"] == "user" else "model"
+        contents.append({"role": role, "parts": [{"text": msg["content"]}]})
+    
+    payload = json.dumps({
+        "contents": contents,
+        "systemInstruction": {"parts": [{"text": ASSISTANT_SYSTEM_PROMPT}]},
+        "generationConfig": {"temperature": 0.7, "maxOutputTokens": 2048}
+    }).encode()
+    
+    req = urllib.request.Request(url, data=payload, headers={"Content-Type": "application/json"})
+    with urllib.request.urlopen(req, timeout=30) as resp:
+        data = json.loads(resp.read().decode())
+    
+    return data["candidates"][0]["content"]["parts"][0]["text"]
+
+def _call_groq(api_key: str, model: str, messages: list) -> str:
+    """Call Groq API via REST (OpenAI-compatible)"""
+    url = "https://api.groq.com/openai/v1/chat/completions"
+    
+    groq_messages = [{"role": "system", "content": ASSISTANT_SYSTEM_PROMPT}]
+    for msg in messages:
+        groq_messages.append({"role": msg["role"], "content": msg["content"]})
+    
+    payload = json.dumps({
+        "model": model,
+        "messages": groq_messages,
+        "temperature": 0.7,
+        "max_tokens": 2048
+    }).encode()
+    
+    req = urllib.request.Request(url, data=payload, headers={
+        "Content-Type": "application/json",
+        "Authorization": f"Bearer {api_key}"
+    })
+    with urllib.request.urlopen(req, timeout=30) as resp:
+        data = json.loads(resp.read().decode())
+    
+    return data["choices"][0]["message"]["content"]
+
+@app.post("/api/assistant")
+async def assistant_chat(request: Request):
+    global assistant_history
+    config = _load_config()
+    
+    # Check if assistant is enabled
+    if not config.get("assistant_enabled", True):
+        return JSONResponse(status_code=403, content={"error": "Assistant is disabled"})
+    
+    data = await request.json()
+    user_msg = data.get("message", "").strip()
+    if not user_msg:
+        return JSONResponse(status_code=400, content={"error": "Empty message"})
+    
+    # Add user message to history
+    assistant_history.append({"role": "user", "content": user_msg})
+    
+    # Keep history manageable (last 20 messages)
+    if len(assistant_history) > 20:
+        assistant_history = assistant_history[-20:]
+    
+    # Determine provider
+    provider = config.get("assistant_provider", "gemini")
+    
+    try:
+        if provider == "groq":
+            api_key = config.get("groq_key", "")
+            model = config.get("groq_model", "llama-3.3-70b-versatile")
+            if not api_key:
+                return JSONResponse(status_code=400, content={"error": "Groq API key not set in config"})
+            reply = await asyncio.to_thread(_call_groq, api_key, model, assistant_history)
+        else:
+            api_key = config.get("gemini_key", "")
+            model = config.get("gemini_model", "gemini-2.5-flash")
+            if not api_key:
+                return JSONResponse(status_code=400, content={"error": "Gemini API key not set in config"})
+            reply = await asyncio.to_thread(_call_gemini, api_key, model, assistant_history)
+        
+        # Add assistant reply to history
+        assistant_history.append({"role": "assistant", "content": reply})
+        return {"reply": reply, "provider": provider}
+    
+    except urllib.error.HTTPError as e:
+        err_body = e.read().decode() if e.fp else str(e)
+        logger.error(f"Assistant API error: {err_body}")
+        return JSONResponse(status_code=502, content={"error": f"API error ({e.code}): {err_body[:200]}"})
+    except Exception as e:
+        logger.error(f"Assistant error: {e}")
+        return JSONResponse(status_code=500, content={"error": str(e)})
+
+@app.get("/api/assistant/config")
+async def get_assistant_config():
+    config = _load_config()
+    return {
+        "enabled": config.get("assistant_enabled", True),
+        "provider": config.get("assistant_provider", "gemini")
+    }
+
+@app.post("/api/assistant/config")
+async def set_assistant_config(request: Request):
+    global assistant_history
+    data = await request.json()
+    config = _load_config()
+    
+    if "enabled" in data:
+        config["assistant_enabled"] = bool(data["enabled"])
+    if "provider" in data and data["provider"] in ("gemini", "groq"):
+        config["assistant_provider"] = data["provider"]
+        # Clear history on provider switch
+        assistant_history = []
+    
+    _save_config(config)
+    return {"status": "ok", "enabled": config.get("assistant_enabled", True), "provider": config.get("assistant_provider", "gemini")}
+
+@app.post("/api/assistant/clear")
+async def clear_assistant_history():
+    global assistant_history
+    assistant_history = []
+    return {"status": "cleared"}
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
