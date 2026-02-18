@@ -410,7 +410,15 @@
                 <span id="status-text" class="status-text">Disconnected</span>
             </div>
 
-            <div style="display: flex; gap: 10px;">
+            <div style="display: flex; gap: 15px; align-items: center;">
+                <!-- Network Info Display -->
+                <div id="network-info"
+                    style="display:none; gap:10px; font-size: 0.9rem; color: var(--text-secondary); background: rgba(0,0,0,0.2); padding: 5px 12px; border-radius: 20px; border: 1px solid var(--border);">
+                    <span>📶 <span id="info-ssid">--</span></span>
+                    <span style="opacity:0.3">|</span>
+                    <span>🔗 <span id="info-ip">--</span></span>
+                </div>
+
                 <select id="port-select">
                     <option value="">Searching ports...</option>
                 </select>
@@ -437,11 +445,37 @@
                     onclick="clearTerminal()">Clear</button>
             </div>
 
+            <!-- System Health Dashboard -->
+            <div id="health-dash"
+                style="display:grid; grid-template-columns: repeat(4, 1fr); gap:10px; margin-bottom: 20px;">
+                <div class="card" style="padding: 15px; margin:0; text-align:center;">
+                    <div style="font-size:0.8rem; color:var(--text-secondary)">FREE HEAP</div>
+                    <div id="stat-heap" style="font-size:1.2rem; font-weight:600; color:var(--accent)">--</div>
+                </div>
+                <div class="card" style="padding: 15px; margin:0; text-align:center;">
+                    <div style="font-size:0.8rem; color:var(--text-secondary)">UPTIME</div>
+                    <div id="stat-uptime" style="font-size:1.2rem; font-weight:600; color:#61dafb">--</div>
+                </div>
+                <div class="card" style="padding: 15px; margin:0; text-align:center;">
+                    <div style="font-size:0.8rem; color:var(--text-secondary)">CPU FREQ</div>
+                    <div id="stat-cpu" style="font-size:1.2rem; font-weight:600; color:#00d26a">--</div>
+                </div>
+                <div class="card" style="padding: 15px; margin:0; text-align:center;">
+                    <div style="font-size:0.8rem; color:var(--text-secondary)">FLASH SIZE</div>
+                    <div id="stat-flash" style="font-size:1.2rem; font-weight:600; color:#bb86fc">--</div>
+                </div>
+            </div>
+
             <div class="terminal-window">
-                <div class="terminal-header">
-                    <div class="dot red"></div>
-                    <div class="dot yellow"></div>
-                    <div class="dot green"></div>
+                <div class="terminal-header" style="justify-content: space-between; align-items: center;">
+                    <div style="display:flex; gap:6px;">
+                        <div class="dot red"></div>
+                        <div class="dot yellow"></div>
+                        <div class="dot green"></div>
+                    </div>
+                    <button class="btn-icon" onclick="copyLogs()"
+                        style="padding: 2px 8px; font-size: 0.8rem; background: rgba(255,255,255,0.1); border:none; color: var(--text-secondary); border-radius: 4px; cursor: pointer;">📋
+                        Copy</button>
                 </div>
                 <div id="terminal-content"></div>
                 <div class="terminal-input-bar">
@@ -511,16 +545,35 @@
                 <h3>⚡ Firmware Update</h3>
                 <p style="color:var(--text-secondary); font-size:0.9rem; margin-bottom:15px;">Flash the latest
                     `firmware.bin`. Requires USB connection.</p>
-                <div style="display:flex; gap:15px;">
+
+                <div style="margin-bottom: 20px;">
+                    <button class="btn-primary" onclick="buildAndFlash()"
+                        style="width: 100%; border-color: #61dafb; color: #61dafb; background: rgba(97, 218, 251, 0.1);">🔥
+                        Build & Flash (from Source)</button>
+                    <div style="text-align: center; margin: 10px 0; color: var(--text-secondary); font-size: 0.8rem;">—
+                        OR Upload Binary —</div>
+                </div>
+
+                <div
+                    style="display:flex; gap:15px; align-items: center; background: var(--bg-dark); padding: 10px; border-radius: 8px; border: 1px solid var(--border);">
                     <div style="flex-grow:1;">
-                        <input type="file" id="fw-file" accept=".bin">
+                        <label for="fw-file" class="btn-primary"
+                            style="background: var(--bg-card); color: var(--text-secondary); border: 1px dashed var(--border); cursor: pointer; display: block; text-align: center; width: auto;">
+                            <span id="file-name">📂 Choose Firmware (.bin)</span>
+                        </label>
+                        <input type="file" id="fw-file" accept=".bin" style="display:none;"
+                            onchange="updateFileName(this)">
                     </div>
-                    <button class="btn-danger" onclick="flashFirmware()">Flash Firmware</button>
+                    <button class="btn-danger" onclick="flashFirmware()">Flash Binary</button>
                 </div>
             </div>
         </div>
 
     </div>
+
+    <!-- Details Modal for WiFi Scan -->
+    <div id="scan-results"
+        style="display:none; margin-top: 10px; background: rgba(0,0,0,0.3); padding: 10px; border-radius: 8px;"></div>
 
     <!-- Scripts remain largely the same logic, just updated for new IDs if any classes changed, but logic is generic -->
     <script>
@@ -531,6 +584,51 @@
         refreshPorts();
         setupWebSocket();
         toggleProviderFields();
+        loadConfig(); // Prefill config
+
+        async function loadConfig() {
+            try {
+                const res = await fetch('/api/config');
+                const config = await res.json();
+                if (config.wifi_ssid) document.getElementById('wifi-ssid').value = config.wifi_ssid;
+                if (config.wifi_password) document.getElementById('wifi-pass').value = config.wifi_password;
+                if (config.gemini_key) document.getElementById('api-key').value = config.gemini_key;
+                if (config.groq_key) document.getElementById('groq-key').value = config.groq_key;
+
+                // Select provider if available (though cli.h doesn't export it in config.json usually, assuming manually added or handled)
+                // If config.json has it, we set it.
+                if (config.ai_provider) {
+                    document.getElementById('ai-provider').value = config.ai_provider;
+                    toggleProviderFields();
+                }
+            } catch (e) {
+                console.log("Config load error:", e);
+            }
+        }
+
+        async function buildAndFlash() {
+            const port = document.getElementById('port-select').value;
+            if (!port) return alert("Select a port!");
+
+            if (!confirm("This will compile the firmware on the host and flash it. Continue?")) return;
+
+            logToTerminal("[SYSTEM] Starting Build & Flash sequence...");
+            switchTab('monitor');
+
+            const formData = new FormData();
+            formData.append("port", port);
+
+            try {
+                const res = await fetch('/api/build_flash', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await res.json();
+                if (!res.ok) alert("Error: " + data.error);
+            } catch (e) {
+                logToTerminal("[ERROR] Request failed: " + e);
+            }
+        }
 
         function toggleProviderFields() {
             const provider = document.getElementById('ai-provider').value;
@@ -542,25 +640,194 @@
             const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
             ws = new WebSocket(`${protocol}//${window.location.host}/ws/logs`);
             ws.onmessage = (event) => {
-                logToTerminal(event.data);
+                const msg = event.data;
+
+                // Hide system info from terminal (it goes to the health cards)
+                if (msg.startsWith("[SYS_INFO]")) {
+                    const jsonStr = msg.replace("[SYS_INFO] ", "");
+                    try {
+                        const data = JSON.parse(jsonStr);
+                        updateHealth(data);
+                    } catch (e) { }
+                    return;
+                }
+
+                // Optional: categorize AI blocks
+                if (msg.startsWith("[AI_JSON]")) {
+                    logToTerminal(msg.replace("[AI_JSON] ", ""), 'device');
+                    return;
+                }
+
+                logToTerminal(msg);
             };
             ws.onclose = () => {
                 setTimeout(setupWebSocket, 1000);
             };
         }
 
+        function copyLogs() {
+            const content = document.getElementById('terminal-content').innerText;
+            if (!content) return alert("Nothing to copy!");
+
+            // Try modern API
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(content).then(() => {
+                    alert("Logs copied to clipboard!");
+                }).catch(err => {
+                    console.error('Failed to copy: ', err);
+                    fallbackCopy(content);
+                });
+            } else {
+                fallbackCopy(content);
+            }
+        }
+
+        function fallbackCopy(text) {
+            const textArea = document.createElement("textarea");
+            textArea.value = text;
+            textArea.style.position = "fixed";  // Avoid scrolling to bottom
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+            try {
+                document.execCommand('copy');
+                alert("Logs copied (fallback)!");
+            } catch (err) {
+                console.error('Fallback copy failed', err);
+                alert("Copy failed. Please select text manually.");
+            }
+            document.body.removeChild(textArea);
+        }
+
         function logToTerminal(msg) {
+            // Handle System Info Updates (Hide from log, update UI)
+            if (msg.includes("[SYS_INFO]")) {
+                try {
+                    const jsonStr = msg.replace("[SYS_INFO] ", "").trim();
+                    const data = JSON.parse(jsonStr);
+
+                    // Update UI
+                    document.getElementById('stat-heap').textContent = (data.heap_free / 1024).toFixed(1) + " KB";
+                    document.getElementById('stat-uptime').textContent = (data.uptime_seconds / 60).toFixed(1) + " m";
+                    document.getElementById('stat-cpu').textContent = data.cpu_freq_mhz + " MHz";
+                    document.getElementById('stat-flash').textContent = (data.flash_size / 1024 / 1024).toFixed(0) + " MB";
+
+                    // Also Hall sensor if available? data.hall_sensor
+                } catch (e) {
+                    console.error("Error parsing SYS_INFO", e);
+                }
+                return; // Don't show in terminal
+            }
+
             const term = document.getElementById('terminal-content');
             const div = document.createElement('div');
-            div.textContent = msg;
-            div.className = "log-entry";
+            // Check if it's the connected message specifically
+            if (msg.includes("[SYSTEM] Connected to")) {
+                div.className = "log-entry";
+                div.style.cssText = "color: #00d26a; font-weight: bold; background: rgba(0, 210, 106, 0.15); padding: 8px 12px; border-radius: 6px; margin: 8px 0; border: 1px solid rgba(0, 210, 106, 0.3); display: flex; align-items: center; gap: 8px;";
+                div.innerHTML = `<span>✅</span> <span>${msg.replace('[SYSTEM]', '').trim()}</span>`;
+            } else {
+                div.textContent = msg;
+                div.className = "log-entry";
 
-            // Stylized logs
-            if (msg.includes("[DEVICE]")) div.classList.add("log-device");
-            if (msg.includes("[SENT]")) div.classList.add("log-sent");
-            if (msg.includes("[ERROR]")) div.classList.add("log-error");
-            if (msg.includes("[SYSTEM]")) div.classList.add("log-system");
-            if (msg.includes("[FLASH]")) { div.style.color = "#ffbd2e"; }
+                // Stylized logs
+                if (msg.includes("[DEVICE]")) div.classList.add("log-device");
+                if (msg.includes("[SENT]")) div.classList.add("log-sent");
+                if (msg.includes("[ERROR]")) div.classList.add("log-error");
+                if (msg.includes("[SYSTEM]")) div.classList.add("log-system");
+                if (msg.includes("[FLASH]")) { div.style.color = "#ffbd2e"; }
+
+                // Build Log Coloring
+                if (msg.includes("[BUILD]")) {
+                    div.style.color = "#61dafb"; // React Blue for build
+
+                    // Dim noisy lines
+                    if (msg.includes("Downloading") || msg.includes("Unpacking") || msg.includes("Installing")) {
+                        div.style.color = "#4a5568"; // Dim gray
+                        div.style.fontSize = "0.85rem";
+                    }
+                    if (msg.includes("SUCCESS")) {
+                        div.style.color = "#00d26a";
+                        div.style.fontWeight = "bold";
+                    }
+                    if (msg.includes("FAILED") || msg.includes("Error")) {
+                        div.style.color = "#f94144";
+                    }
+                    if (msg.includes("Compiling") || msg.includes("Linking")) {
+                        div.style.color = "#a5b4fc"; // Light Indigo
+                    }
+                }
+            }
+
+            // Auto-detect Network Info
+            if (msg.includes("IP address: ")) {
+                const ip = msg.split("IP address: ")[1].trim();
+                document.getElementById('info-ip').textContent = ip;
+                document.getElementById('network-info').style.display = 'flex';
+            }
+            if (msg.includes("Connecting to WiFi: ")) {
+                const ssid = msg.split("Connecting to WiFi: ")[1].trim();
+                document.getElementById('info-ssid').textContent = ssid;
+            }
+
+            // Signal Handling for Auto-Disconnect/Reconnect
+            if (msg.includes("[SYSTEM] Closing serial")) {
+                handleDisconnectUI();
+            }
+            if (msg.includes("[SYSTEM] Build & Flash Complete! Rebooting")) {
+                setTimeout(() => {
+                    if (!isConnected) {
+                        logToTerminal("[SYSTEM] Auto-reconnecting...");
+                        toggleConnection();
+                    }
+                }, 3000);
+            }
+
+            // WiFi Scan Parser
+            if (msg.includes("networks found")) {
+                const numStr = msg.split(" ")[0]; // "-2" or "5"
+                const num = parseInt(numStr);
+                const resultsDiv = document.getElementById('scan-results');
+
+                if (num < 0) {
+                    resultsDiv.style.display = 'block';
+                    resultsDiv.innerHTML = `<div style="color:var(--error)">⚠️ WiFi Scan Error (Code: ${num}). Try moving closer or restarting.</div>`;
+                } else if (num === 0) {
+                    resultsDiv.style.display = 'block';
+                    resultsDiv.innerHTML = `<div style="color:var(--text-secondary)">No networks found.</div>`;
+                } else {
+                    resultsDiv.style.display = 'block';
+                    resultsDiv.innerHTML = `<div style="margin-bottom:5px; font-weight:600; color:var(--accent)">${num} Networks Found:</div><div id="wifi-list" style="display:flex; flex-direction:column; gap:5px;"></div>`;
+                    window.isScanning = true; // Flag to capture next lines
+                    window.scanCount = num;
+                    window.scannedSoFar = 0;
+                }
+            } else if (window.isScanning) {
+                // Parse lines like: "1: MyWifi (-60) *"
+                // Regex: index: SSID (RSSI) Enc?
+                const match = msg.match(/^\d+:\s(.+)\s\((-?\d+)\)\s?(\*)?/);
+                if (match) {
+                    const ssid = match[1];
+                    const rssi = match[2];
+                    const enc = match[3] ? '🔒' : '🔓';
+
+                    const item = document.createElement('div');
+                    item.style.cssText = "display:flex; justify-content:space-between; background:rgba(255,255,255,0.05); padding:8px; border-radius:4px; cursor:pointer;";
+                    item.innerHTML = `<span>${enc} <b>${ssid}</b></span> <span style="font-size:0.8rem; opacity:0.7">${rssi} dBm</span>`;
+                    item.onclick = () => {
+                        document.getElementById('wifi-ssid').value = ssid;
+                        switchTab('setup');
+                    };
+
+                    const list = document.getElementById('wifi-list');
+                    if (list) list.appendChild(item);
+
+                    window.scannedSoFar++;
+                    if (window.scannedSoFar >= window.scanCount) {
+                        window.isScanning = false;
+                    }
+                }
+            }
 
             term.appendChild(div);
             term.scrollTop = term.scrollHeight;
@@ -657,7 +924,7 @@
             document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
             document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
 
-            event.target.classList.add('active');
+            event.target.classList.add('active'); // Assumes inline call context
             document.getElementById(tabName).classList.add('active');
         }
 
@@ -712,6 +979,21 @@
             } catch (e) {
                 logToTerminal("[ERROR] Flash request failed: " + e);
             }
+        }
+
+        // Handle auto-reconnect UI logic
+        function handleDisconnectUI() {
+            const btn = document.getElementById('connect-btn');
+            const led = document.getElementById('status-led');
+            const statusText = document.getElementById('status-text');
+
+            isConnected = false;
+            btn.textContent = "Connect";
+            btn.classList.remove("btn-danger");
+            btn.classList.add("btn-primary");
+            led.className = "status-dot disconnected";
+            statusText.textContent = "Disconnected (Flashing/Reboot)";
+            statusText.style.color = "var(--warning)";
         }
     </script>
 </body>

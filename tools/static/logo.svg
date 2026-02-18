@@ -1,0 +1,35 @@
+<svg width="200" height="200" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="neonRed" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#ff4d4d;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#ff0000;stop-opacity:1" />
+    </linearGradient>
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="2.5" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  
+  <g fill="url(#neonRed)" filter="url(#glow)">
+    <!-- Body -->
+    <path d="M100,60 C85,60 75,75 75,90 C75,115 85,130 100,140 C115,130 125,115 125,90 C125,75 115,60 100,60 Z" />
+    <path d="M90,70 L95,80 L100,75 L105,80 L110,70" stroke="black" stroke-width="2" fill="none" opacity="0.3"/>
+    
+    <!-- Tail -->
+    <path d="M100,55 C100,55 105,40 120,35 C135,30 145,45 140,60 C135,75 125,70 125,70" stroke="url(#neonRed)" stroke-width="8" fill="none" stroke-linecap="round"/>
+    <polygon points="120,75 130,65 140,85" /> 
+
+    <!-- Legs Left -->
+    <path d="M80,90 L60,80 M80,100 L60,100 M80,110 L65,120" stroke="url(#neonRed)" stroke-width="4" stroke-linecap="round"/>
+    
+    <!-- Legs Right -->
+    <path d="M120,90 L140,80 M120,100 L140,100 M120,110 L135,120" stroke="url(#neonRed)" stroke-width="4" stroke-linecap="round"/>
+
+    <!-- Claws -->
+    <path d="M85,70 L60,50 L50,60 M60,50 L50,40" stroke="url(#neonRed)" stroke-width="6" stroke-linecap="round" fill="none"/>
+    <path d="M115,70 L140,50 L150,60 M140,50 L150,40" stroke="url(#neonRed)" stroke-width="6" stroke-linecap="round" fill="none"/>
+  </g>
+</svg>

@@ -1,3 +1,4 @@
+from typing import Optional
 from fastapi import FastAPI, WebSocket, Request, BackgroundTasks
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
@@ -23,10 +24,12 @@ app = FastAPI()
 app.mount("/static", StaticFiles(directory="tools/static"), name="static")
 templates = Jinja2Templates(directory="tools/templates")
 
-# Global variables for serial connection
-serial_port = None
-serial_connection = None
+# Global state
+serial_port: Optional[serial.Serial] = None
+serial_connection: Optional[serial.Serial] = None
+connected_port: str = ""
 websocket_clients = set()
+flashing_in_progress = False
 
 # Helper to broadcast messages to all connected clients
 async def broadcast_log(message: str):
@@ -50,7 +53,20 @@ async def read_serial():
                 if serial_connection.in_waiting > 0:
                     line = serial_connection.readline().decode('utf-8', errors='replace').strip()
                     if line:
-                        await broadcast_log(f"[DEVICE] {line}")
+                        # Intercept System Info JSON
+                        if line.startswith("{") and "heap_free" in line:
+                            # Log as info but don't broadcast to main console?
+                            # Actually, we broadcast but tag as [SYS_INFO].
+                            # The frontend can then decide to hide it from the log view.
+                            # BUT the user wants it gone from the dashboard console.
+                            # So we broadcast it so the "Health" charts get it, but we
+                            # don't broadcast it as a standard [DEVICE] log.
+                            await broadcast_log(f"[SYS_INFO] {line}")
+                        elif line.startswith("{") and "\"thought\"" in line:
+                            # AI Thought block
+                            await broadcast_log(f"[AI_JSON] {line}")
+                        else:
+                            await broadcast_log(f"[DEVICE] {line}")
                 else:
                     await asyncio.sleep(0.1)
             except Exception as e:
@@ -60,9 +76,21 @@ async def read_serial():
         else:
             await asyncio.sleep(1)
 
+# Background task to poll system info
+async def poll_system_info():
+    while True:
+        if serial_connection and serial_connection.is_open and not flashing_in_progress:
+            try:
+                # Send system_info command silently
+                serial_connection.write(b"system_info\n")
+            except Exception as e:
+                logger.error(f"Poll error: {e}")
+        await asyncio.sleep(5) # Poll every 5 seconds
+
 @app.on_event("startup")
 async def startup_event():
     asyncio.create_task(read_serial())
+    asyncio.create_task(poll_system_info())
 
 @app.get("/")
 async def get_index(request: Request):
@@ -221,6 +249,115 @@ async def flash_firmware(file: UploadFile, port: str = Form(...)):
         if os.path.exists(temp_filename):
             os.remove(temp_filename)
         # We don't auto-reconnect because device is rebooting
+
+@app.get("/api/config")
+async def get_config():
+    config_path = "config.json"
+    if os.path.exists(config_path):
+        try:
+            with open(config_path, "r") as f:
+                return json.load(f)
+        except Exception as e:
+            return JSONResponse(status_code=500, content={"error": str(e)})
+    return {}
+
+@app.post("/api/build_flash")
+async def build_and_flash(port: str = Form(...)):
+    global serial_connection, flashing_in_progress
+    
+    # Path to where PIO builds the binary
+    # We assume running from project root
+    firmware_binary = os.path.join("firmware", ".pio", "build", "esp32dev", "firmware.bin")
+    
+    try:
+        flashing_in_progress = True
+        
+        # 1. Build Firmware
+        await broadcast_log(f"[SYSTEM] Building Firmware...")
+        
+        # Always use module invocation to avoid PATH issues in uv/venvs
+        build_cmd = [sys.executable, "-m", "platformio", "run", "-d", "firmware"]
+        logger.info(f"Executing Build Command: {build_cmd}")
+        
+        process_build = await asyncio.create_subprocess_exec(
+            *build_cmd,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE
+        )
+        
+        # Stream build output
+        async for line in process_build.stdout:
+            msg = line.decode().strip()
+            if msg:
+                # Log only important lines to console to avoid clutter, but all to WS
+                if "[ERROR]" in msg or "Error" in msg or "Failed" in msg:
+                    logger.error(f"Build Output: {msg}")
+                await broadcast_log(f"[BUILD] {msg}")
+            
+        await process_build.wait()
+        
+        if process_build.returncode != 0:
+            stderr = await process_build.stderr.read()
+            err_msg = stderr.decode().strip()
+            logger.error(f"Build Failed Code {process_build.returncode}: {err_msg}")
+            await broadcast_log(f"[ERROR] Build Failed: {err_msg}")
+            flashing_in_progress = False
+            return JSONResponse(status_code=500, content={"error": f"Build failed: {err_msg}"})
+
+        await broadcast_log("[SYSTEM] Build Success! Starting Flash...")
+        logger.info("Build Successful. Proceeding to Flash.")
+
+        # 2. Close Serial if open
+        if serial_connection and serial_connection.is_open:
+            await broadcast_log("[SYSTEM] Closing serial for flashing...")
+            serial_connection.close()
+            serial_connection = None
+
+        # 3. Flash Firmware
+        await broadcast_log(f"[SYSTEM] Flashing to {port}...")
+        
+        flash_cmd = [
+            sys.executable, "-m", "esptool",
+            "--chip", "esp32",
+            "--port", port,
+            "--baud", "460800",
+            "--before", "default_reset",
+            "--after", "hard_reset",
+            "write_flash", "-z",
+            "--flash_mode", "dio",
+            "--flash_size", "detect",
+            "0x10000", firmware_binary
+        ]
+
+        process_flash = await asyncio.create_subprocess_exec(
+            *flash_cmd,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE
+        )
+        
+        while True:
+            line = await process_flash.stdout.readline()
+            if not line: break
+            msg = line.decode().strip()
+            if msg: await broadcast_log(f"[FLASH] {msg}")
+
+        await process_flash.wait()
+        
+        if process_flash.returncode == 0:
+            await broadcast_log("[SYSTEM] Build & Flash Complete! Rebooting...")
+            return {"status": "success"}
+        else:
+            stderr = await process_flash.stderr.read()
+            err_msg = stderr.decode().strip()
+            await broadcast_log(f"[ERROR] Flash Failed: {err_msg}")
+            return JSONResponse(status_code=500, content={"error": f"Flash failed: {err_msg}"})
+            
+    except Exception as e:
+        logger.error(f"Build/Flash Error: {e}")
+        await broadcast_log(f"[ERROR] Exception: {str(e)}")
+        return JSONResponse(status_code=500, content={"error": str(e)})
+    finally:
+        flashing_in_progress = False
 
 if __name__ == "__main__":
     import uvicorn
