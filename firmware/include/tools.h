@@ -39,12 +39,9 @@ public:
                 int count = cmd["count"];
                 JsonArray steps = cmd["steps"].as<JsonArray>();
                 
-                // Recursively running loops is tricky with flat JSON. 
-                // We'll re-serialize steps to handle it recursively or just handle 1 level safely.
-                // For simplicity/safety in this structure, let's just re-use a helper method
-                // BUT we can't call runScript (it launches a task).
-                // We need a blocking helper for the *internal* execution of the task.
-                executeScriptInternal(steps); 
+                for (int i = 0; i < count; i++) {
+                    executeScriptInternal(steps);
+                }
             }
         }
         
