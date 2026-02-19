@@ -1,3 +1,6 @@
+#ifndef BLE_TOOLS_H
+#define BLE_TOOLS_H
+
 #include <Arduino.h>
 #include <BLEDevice.h>
 #include <BLEUtils.h>
