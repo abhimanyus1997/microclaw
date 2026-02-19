@@ -57,7 +57,11 @@ public:
             if (safeName.length() == 0) safeName = "Unknown";
             
             obj["name"] = safeName;
-            obj["addr"] = device.getAddress().toString().c_str();
+            
+            // Fix garbage address: Convert std::string to Arduino String explicitly
+            std::string addrStd = device.getAddress().toString();
+            obj["addr"] = String(addrStd.c_str());
+            
             obj["rssi"] = device.getRSSI();
             
             if (device.haveServiceUUID()) {
