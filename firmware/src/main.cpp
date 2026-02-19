@@ -68,10 +68,11 @@ String handleAgentRequest(String userText, JsonArray history = JsonArray(), int 
     }
 
     contextPrompt += "Respond with a JSON object: {\"thought\": \"...\", \"tool\": \"tool_name\", \"args\": { ... }, \"reply\": \"...\"}. ";
-    contextPrompt += "Valid tools: 'get_system_stats' {}, 'wifi_scan' {}, 'ble_scan' {}, 'memory_write' {content: '...'}, 'memory_read' {}. ";
+    contextPrompt += "Valid tools: 'get_system_stats' {}, 'wifi_scan' {}, 'ble_scan' {}, 'ble_connect' {address: '...'}, 'ble_disconnect' {}, 'memory_write' {content: '...'}, 'memory_read' {}. ";
     contextPrompt += "'run_script' { script: [ {cmd: \"gpio\", pin: 2, state: 1}, {cmd: \"delay\", ms: 1000}, {cmd: \"loop\", count: 5, steps: [...]} ] }. ";
-    contextPrompt += "Use 'run_script' for ALL hardware control (blinking, patterns, resizing). If no tool needed, set tool to 'none'. ";
-    contextPrompt += "IMPORTANT: If you use a tool, you must still provide a friendly 'reply' explaining what you are doing (e.g. 'Checking stats for you now...'). The user will see your reply AND the tool output separately.";
+    contextPrompt += "Use 'run_script' for ALL hardware control (blinking, patterns, resizing). ";
+    contextPrompt += "IMPORTANT: 'run_script' is NON-BLOCKING. The script runs in the background. ";
+    contextPrompt += "Your reply should be: 'I have started the script...' instead of 'I executed...'. The user will see the action happen immediately after your reply.";
 
     // Call AI Provider
     String response;

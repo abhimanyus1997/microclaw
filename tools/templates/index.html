@@ -649,6 +649,12 @@
 
         <!-- Setup Panel -->
         <div id="setup" class="panel">
+            <div style="margin-bottom: 20px;">
+                <button class="btn-primary" onclick="syncConfig()"
+                    style="width:100%; background:rgba(0, 210, 106, 0.1); border: 1px solid var(--success); color: var(--success);">
+                    🔄 Sync Local config.json to Device
+                </button>
+            </div>
             <div class="form-row">
                 <!-- Network Config -->
                 <div class="card">
@@ -1177,6 +1183,30 @@
                 if (!res.ok) alert("Error: " + data.error);
             } catch (e) {
                 logToTerminal("[ERROR] Flash request failed: " + e);
+            }
+        }
+
+        async function syncConfig() {
+            const port = document.getElementById('port-select').value;
+            if (!port) return alert("Select a port!");
+
+            logToTerminal("[SYSTEM] Syncing local config.json to device...");
+            switchTab('monitor');
+
+            try {
+                const res = await fetch('/api/sync_config', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ port })
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    logToTerminal("[SYSTEM] Configuration Sync Successful!");
+                } else {
+                    alert("Error: " + data.error);
+                }
+            } catch (e) {
+                logToTerminal("[ERROR] Sync request failed: " + e);
             }
         }
 

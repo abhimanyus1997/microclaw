@@ -10,44 +10,53 @@
 
 class BleTools {
 public:
+    static BLEClient* pClient;
+
     static String scan() {
         Serial.println("BLE: Scanning for 5 seconds...");
         
-        // Initialize BLE if not already (safe to call multiple times? usually yes, or check logic)
-        // BLEDevice::init is robust given we are in a single-threaded loop mostly.
-        // But better to check. We'll just init.
         BLEDevice::init("MicroClaw-ESP32");
         
         BLEScan* pBLEScan = BLEDevice::getScan();
-        pBLEScan->setActiveScan(true); // Active scan for names
+        pBLEScan->setActiveScan(true); 
         pBLEScan->setInterval(100);
         pBLEScan->setWindow(99);
         
-        // Scan for 5 seconds
         BLEScanResults foundDevices = pBLEScan->start(5, false);
         int count = foundDevices.getCount();
         Serial.printf("BLE: Found %d devices\n", count);
         
         if (count == 0) {
             pBLEScan->clearResults();
+            BLEDevice::deinit(true); // Release memory
             return "No devices found.";
         }
 
-        DynamicJsonDocument doc(4096);
+        // Reduced buffer size to prevent heap exhaustion
+        DynamicJsonDocument doc(2048);
         JsonArray array = doc.to<JsonArray>();
         
-        for (int i = 0; i < count; i++) {
+        // LIMIT to top 10 devices to save RAM
+        int max_devices = (count > 10) ? 10 : count;
+        
+        for (int i = 0; i < max_devices; i++) {
             BLEAdvertisedDevice device = foundDevices.getDevice(i);
             JsonObject obj = array.createNestedObject();
             
-            // Name (handle empty)
             std::string name = device.getName();
-            if (name.length() > 0) {
-                obj["name"] = name.c_str();
-            } else {
-                obj["name"] = "Unknown";
-            }
+            String safeName = "";
             
+            // SANITIZE NAME: Remove control characters that break JSON
+            if (name.length() > 0) {
+                for (char c : name) {
+                    if (isPrintable(c) && c != '"' && c != '\\') {
+                        safeName += c;
+                    }
+                }
+            }
+            if (safeName.length() == 0) safeName = "Unknown";
+            
+            obj["name"] = safeName;
             obj["addr"] = device.getAddress().toString().c_str();
             obj["rssi"] = device.getRSSI();
             
@@ -59,9 +68,51 @@ public:
         String output;
         serializeJson(doc, output);
         
-        pBLEScan->clearResults(); // Release memory
+        pBLEScan->clearResults(); 
+        BLEDevice::deinit(true); // Important to free BT stack memory for SSL
         return output;
     }
+
+    static String connect(String address) {
+        if (pClient && pClient->isConnected()) {
+            return "Already connected. Disconnect first.";
+        }
+
+        BLEDevice::init("MicroClaw-ESP32");
+        if (!pClient) {
+            pClient = BLEDevice::createClient();
+        }
+
+        Serial.print("Connecting to: ");
+        Serial.println(address);
+
+        if (pClient->connect(BLEAddress(address.c_str()))) {
+            Serial.println("Connected to server");
+            
+            // List services
+            String services = "Connected. Services: ";
+            std::map<std::string, BLERemoteService*>* pServices = pClient->getServices();
+            if (pServices) {
+                for (auto const& entry : *pServices) {
+                    services += String(entry.first.c_str()) + ", ";
+                }
+            }
+            return services;
+        } else {
+            return "Failed to connect.";
+        }
+    }
+
+    static String disconnect() {
+        if (pClient && pClient->isConnected()) {
+            pClient->disconnect();
+            BLEDevice::deinit(true); // Free memory
+            return "Disconnected.";
+        }
+        return "Not connected.";
+    }
 };
+
+BLEClient* BleTools::pClient = nullptr;
 
 #endif

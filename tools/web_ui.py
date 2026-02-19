@@ -161,6 +161,70 @@ async def send_command(request: Request):
             return JSONResponse(status_code=500, content={"error": str(e)})
     return {"status": "ignored"}
 
+async def sync_config_to_device(port, config_data):
+    """Helper to push config.json values to device via Serial"""
+    global serial_connection
+    
+    close_after = False
+    if not serial_connection or not serial_connection.is_open:
+        try:
+            serial_connection = serial.Serial(port, 115200, timeout=1)
+            close_after = True
+        except Exception as e:
+            await broadcast_log(f"[ERROR] Failed to open port for sync: {e}")
+            return False
+
+    try:
+        commands = []
+        # Push keys first
+        if config_data.get("gemini_key"):
+            commands.append(f'set_api_key "{config_data["gemini_key"]}"')
+        if config_data.get("groq_key"):
+            commands.append(f'set_groq_key "{config_data["groq_key"]}"')
+        if config_data.get("assistant_provider"):
+            commands.append(f'set_provider "{config_data.get("assistant_provider")}"')
+        if config_data.get("telegram_token"):
+            commands.append(f'set_tg_token "{config_data.get("telegram_token")}"')
+            
+        # Push WiFi last as it triggers a reboot in current firmware
+        if config_data.get("wifi_ssid"):
+            ssid = config_data["wifi_ssid"]
+            pwd = config_data.get("wifi_password", "")
+            commands.append(f'wifi_set "{ssid}" "{pwd}"')
+
+        for cmd in commands:
+            await broadcast_log(f"[SYSTEM] Syncing: {cmd}")
+            serial_connection.write(f"{cmd}\n".encode())
+            await asyncio.sleep(0.8) # Wait for device to process
+            
+        return True
+    except Exception as e:
+        await broadcast_log(f"[ERROR] Sync failed: {e}")
+        return False
+    finally:
+        if close_after and serial_connection:
+            serial_connection.close()
+            serial_connection = None
+
+@app.post("/api/sync_config")
+async def api_sync_config(request: Request):
+    global serial_port
+    data = await request.json()
+    port = data.get("port") or serial_port
+    
+    if not port:
+        return JSONResponse(status_code=400, content={"error": "Port required"})
+        
+    config_data = _load_config()
+    if not config_data:
+        return JSONResponse(status_code=400, content={"error": "Local config.json not found"})
+        
+    success = await sync_config_to_device(port, config_data)
+    if success:
+        return {"status": "success"}
+    else:
+        return JSONResponse(status_code=500, content={"error": "Sync failed"})
+
 @app.websocket("/ws/logs")
 async def websocket_endpoint(websocket: WebSocket):
     await websocket.accept()
@@ -351,6 +415,14 @@ async def build_and_flash(port: str = Form(...)):
         
         if process_flash.returncode == 0:
             await broadcast_log("[SYSTEM] Build & Flash Complete! Rebooting...")
+            
+            # Proactive: Sync config after reboot
+            config_data = _load_config()
+            if config_data:
+                await broadcast_log("[SYSTEM] Waiting 5s for device to boot before syncing config...")
+                await asyncio.sleep(5)
+                await sync_config_to_device(port, config_data)
+                
             return {"status": "success"}
         else:
             stderr = await process_flash.stderr.read()
