@@ -613,25 +613,8 @@
             </div>
 
             <!-- System Health Dashboard -->
-            <div id="health-dash"
-                style="display:grid; grid-template-columns: repeat(4, 1fr); gap:10px; margin-bottom: 20px;">
-                <div class="card" style="padding: 15px; margin:0; text-align:center;">
-                    <div style="font-size:0.8rem; color:var(--text-secondary)">FREE HEAP</div>
-                    <div id="stat-heap" style="font-size:1.2rem; font-weight:600; color:var(--accent)">--</div>
-                </div>
-                <div class="card" style="padding: 15px; margin:0; text-align:center;">
-                    <div style="font-size:0.8rem; color:var(--text-secondary)">UPTIME</div>
-                    <div id="stat-uptime" style="font-size:1.2rem; font-weight:600; color:#61dafb">--</div>
-                </div>
-                <div class="card" style="padding: 15px; margin:0; text-align:center;">
-                    <div style="font-size:0.8rem; color:var(--text-secondary)">CPU FREQ</div>
-                    <div id="stat-cpu" style="font-size:1.2rem; font-weight:600; color:#00d26a">--</div>
-                </div>
-                <div class="card" style="padding: 15px; margin:0; text-align:center;">
-                    <div style="font-size:0.8rem; color:var(--text-secondary)">FLASH SIZE</div>
-                    <div id="stat-flash" style="font-size:1.2rem; font-weight:600; color:#bb86fc">--</div>
-                </div>
-            </div>
+            <!-- System Health Dashboard Removed (Moved to console logs) -->
+            <div id="health-dash" style="display:none;"></div>
 
             <div class="terminal-window">
                 <div class="terminal-header" style="justify-content: space-between; align-items: center;">
@@ -854,12 +837,15 @@
                 const msg = event.data;
 
                 // Hide system info from terminal (it goes to the health cards)
+                // Log system info to console explicitly, hide from visual terminal
                 if (msg.startsWith("[SYS_INFO]")) {
                     const jsonStr = msg.replace("[SYS_INFO] ", "");
                     try {
                         const data = JSON.parse(jsonStr);
-                        updateHealth(data);
-                    } catch (e) { }
+                        console.log("System Info:", data);
+                    } catch (e) {
+                        console.error("Error parsing SYS_INFO", e);
+                    }
                     return;
                 }
 
@@ -916,14 +902,7 @@
                 try {
                     const jsonStr = msg.replace("[SYS_INFO] ", "").trim();
                     const data = JSON.parse(jsonStr);
-
-                    // Update UI
-                    document.getElementById('stat-heap').textContent = (data.heap_free / 1024).toFixed(1) + " KB";
-                    document.getElementById('stat-uptime').textContent = (data.uptime_seconds / 60).toFixed(1) + " m";
-                    document.getElementById('stat-cpu').textContent = data.cpu_freq_mhz + " MHz";
-                    document.getElementById('stat-flash').textContent = (data.flash_size / 1024 / 1024).toFixed(0) + " MB";
-
-                    // Also Hall sensor if available? data.hall_sensor
+                    console.log("System Info (Log):", data);
                 } catch (e) {
                     console.error("Error parsing SYS_INFO", e);
                 }

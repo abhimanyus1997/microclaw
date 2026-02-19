@@ -370,6 +370,8 @@ Key knowledge:
 - Config file (config.json): wifi_ssid, wifi_password, gemini_key, gemini_model, groq_key, groq_model
 - Firmware is built with PlatformIO (pio run -d firmware) and flashed via esptool
 - The ESP32 runs a web UI at its IP for AI chat, and exposes tools: wifi_scan, ble_scan, gpio_set, gpio_read, memory_write, memory_read
+- **NEW**: `run_script` tool for running JSON-based hardware scripts (gpio, delay, loops). Example: `{"cmd": "loop", "count": 5, "steps": [...]}`
+
 - The Manager (this app) monitors serial output, configures WiFi/API keys, and can build+flash firmware
 - Quick start: plug in ESP32 → connect in Manager → set WiFi + API key → flash → device reboots and joins WiFi
 
