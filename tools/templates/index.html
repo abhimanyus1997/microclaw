@@ -53,6 +53,7 @@
             margin: 0;
             background: linear-gradient(135deg, #fff 0%, var(--text-secondary) 100%);
             -webkit-background-clip: text;
+            background-clip: text;
             -webkit-text-fill-color: transparent;
             letter-spacing: -1px;
         }
@@ -253,13 +254,15 @@
         }
 
         #terminal-content {
-            height: 400px;
+            height: 550px;
             padding: 15px;
             overflow-y: auto;
             font-family: 'JetBrains Mono', monospace;
             font-size: 0.9rem;
             color: #a9b7c6;
             line-height: 1.5;
+            background: rgba(13, 14, 17, 0.95);
+            /* Slightly darker bg */
         }
 
         .log-entry {
@@ -348,8 +351,15 @@
         .quick-actions {
             display: flex;
             gap: 12px;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
             flex-wrap: wrap;
+            justify-content: space-between;
+            /* Spread buttons out */
+            align-items: center;
+            background: rgba(24, 26, 32, 0.5);
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
         }
 
         @keyframes fadeIn {
@@ -607,8 +617,7 @@
                 <button class="btn-primary" style="background:var(--bg-card); border-color:var(--border);"
                     onclick="sendCommand('config_show')">⚙️ Show Config</button>
                 <button class="btn-danger" onclick="sendCommand('restart')">↺ Restart Device</button>
-                <button class="btn-primary"
-                    style="background:var(--bg-card); border-color:var(--border); margin-left: auto;"
+                <button class="btn-primary" style="background:var(--bg-card); border-color:var(--border);"
                     onclick="clearTerminal()">Clear</button>
             </div>
 
@@ -682,7 +691,7 @@
                         <button class="btn-primary" onclick="saveKey('groq')">Save Groq Key</button>
                     </div>
 
-                    <div style="margin-top:15px; pt-3; border-top:1px solid var(--border);">
+                    <div style="margin-top:15px; padding-top:15px; border-top:1px solid var(--border);">
                         <button class="btn-primary"
                             style="width:100%; background:var(--bg-card); border:1px solid var(--accent); color:var(--accent);"
                             onclick="saveProvider()">Set Active Provider</button>
