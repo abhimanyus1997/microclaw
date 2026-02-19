@@ -393,8 +393,10 @@ def _save_config(config):
     with open("config.json", "w") as f:
         json.dump(config, f, indent=4)
 
+from curl_cffi import requests
+
 def _call_gemini(api_key: str, model: str, messages: list) -> str:
-    """Call Gemini API via REST"""
+    """Call Gemini API via curl_cffi (impersonating browser to avoid 403)"""
     url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}"
     
     # Build Gemini contents format
@@ -403,41 +405,61 @@ def _call_gemini(api_key: str, model: str, messages: list) -> str:
         role = "user" if msg["role"] == "user" else "model"
         contents.append({"role": role, "parts": [{"text": msg["content"]}]})
     
-    payload = json.dumps({
+    payload = {
         "contents": contents,
         "systemInstruction": {"parts": [{"text": ASSISTANT_SYSTEM_PROMPT}]},
         "generationConfig": {"temperature": 0.7, "maxOutputTokens": 2048}
-    }).encode()
+    }
     
-    req = urllib.request.Request(url, data=payload, headers={"Content-Type": "application/json"})
-    with urllib.request.urlopen(req, timeout=30) as resp:
-        data = json.loads(resp.read().decode())
-    
-    return data["candidates"][0]["content"]["parts"][0]["text"]
+    try:
+        resp = requests.post(
+            url, 
+            json=payload, 
+            headers={"Content-Type": "application/json"},
+            impersonate="chrome"
+        )
+        resp.raise_for_status()
+        data = resp.json()
+        return data["candidates"][0]["content"]["parts"][0]["text"]
+    except Exception as e:
+        logger.error(f"Gemini API Error: {e}")
+        if hasattr(e, 'response') and e.response:
+            logger.error(f"Response: {e.response.text}")
+        raise
 
 def _call_groq(api_key: str, model: str, messages: list) -> str:
-    """Call Groq API via REST (OpenAI-compatible)"""
+    """Call Groq API via curl_cffi (impersonating browser)"""
     url = "https://api.groq.com/openai/v1/chat/completions"
     
     groq_messages = [{"role": "system", "content": ASSISTANT_SYSTEM_PROMPT}]
     for msg in messages:
         groq_messages.append({"role": msg["role"], "content": msg["content"]})
     
-    payload = json.dumps({
+    payload = {
         "model": model,
         "messages": groq_messages,
         "temperature": 0.7,
         "max_tokens": 2048
-    }).encode()
+    }
     
-    req = urllib.request.Request(url, data=payload, headers={
-        "Content-Type": "application/json",
-        "Authorization": f"Bearer {api_key}"
-    })
-    with urllib.request.urlopen(req, timeout=30) as resp:
-        data = json.loads(resp.read().decode())
-    
-    return data["choices"][0]["message"]["content"]
+    try:
+        resp = requests.post(
+            url, 
+            json=payload, 
+            headers={
+                "Content-Type": "application/json",
+                "Authorization": f"Bearer {api_key}"
+            },
+            impersonate="chrome"
+        )
+        resp.raise_for_status()
+        data = resp.json()
+        return data["choices"][0]["message"]["content"]
+    except Exception as e:
+        logger.error(f"Groq API Error: {e}")
+        if hasattr(e, 'response') and e.response:
+            logger.error(f"Response: {e.response.text}")
+        raise
 
 @app.post("/api/assistant")
 async def assistant_chat(request: Request):
