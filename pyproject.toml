@@ -5,6 +5,7 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
+    "curl_cffi>=0.7.0",
     "esptool>=5.2.0",
     "fastapi>=0.129.0",
     "platformio>=6.1.19",
