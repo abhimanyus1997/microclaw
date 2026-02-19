@@ -9,12 +9,44 @@ class Tools {
 public:
     Tools() {}
 
+    // Execute a script of commands (GPIO, Delay, Loop)
+    String runScript(JsonArray script) {
+        if (script.isNull()) return "Invalid script";
+        
+        for (JsonVariant v : script) {
+            JsonObject cmd = v.as<JsonObject>();
+            String type = cmd["cmd"].as<String>();
+            
+            if (type == "gpio") {
+                int pin = cmd["pin"];
+                int state = cmd["state"];
+                pinMode(pin, OUTPUT);
+                digitalWrite(pin, state ? HIGH : LOW);
+            }
+            else if (type == "delay") {
+                int ms = cmd["ms"];
+                delay(ms);
+            }
+            else if (type == "loop") {
+                int count = cmd["count"];
+                JsonArray steps = cmd["steps"].as<JsonArray>();
+                for (int i = 0; i < count; i++) {
+                    runScript(steps);
+                }
+            }
+        }
+        return "Script executed";
+    }
+
     // Execute a tool call based on name and arguments (JSON object)
     String execute(String toolName, JsonObject args) {
         Serial.print("Executing tool: ");
         Serial.println(toolName);
 
-        if (toolName == "memory_write") {
+        if (toolName == "run_script") {
+            return runScript(args["script"].as<JsonArray>());
+        }
+        else if (toolName == "memory_write") {
             const char* content = args["content"];
             if (content) {
                 fsManager.appendFile("/MEMORY.md", content);
