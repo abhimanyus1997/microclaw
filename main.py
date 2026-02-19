@@ -5,8 +5,13 @@ import shutil
 
 def is_admin():
     try:
-        return os.getuid() == 0
-    except AttributeError:
+        # Linux/Unix/macOS
+        if hasattr(os, 'getuid'):
+            return os.getuid() == 0
+        # Windows
+        import ctypes
+        return ctypes.windll.shell32.IsUserAnAdmin() != 0
+    except (AttributeError, ImportError):
         return False
 
 def main():
