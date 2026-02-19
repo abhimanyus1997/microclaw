@@ -207,12 +207,12 @@ async def flash_firmware(file: UploadFile, port: str = Form(...)):
         "--chip", "esp32",
         "--port", port,
         "--baud", "460800",
-        "--before", "default_reset",
-        "--after", "hard_reset",
+        "--before", "default-reset",
+        "--after", "hard-reset",
         "write_flash", "-z",
-        "--flash_mode", "dio",
-        "--flash_freq", "40m",
-        "--flash_size", "detect",
+        "--flash-mode", "dio",
+        "--flash-freq", "40m",
+        "--flash-size", "detect",
         "0x10000", temp_filename
     ]
 
@@ -321,11 +321,11 @@ async def build_and_flash(port: str = Form(...)):
             "--chip", "esp32",
             "--port", port,
             "--baud", "460800",
-            "--before", "default_reset",
-            "--after", "hard_reset",
+            "--before", "default-reset",
+            "--after", "hard-reset",
             "write_flash", "-z",
-            "--flash_mode", "dio",
-            "--flash_size", "detect",
+            "--flash-mode", "dio",
+            "--flash-size", "detect",
             "0x10000", firmware_binary
         ]
 
