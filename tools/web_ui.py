@@ -316,6 +316,10 @@ async def build_and_flash(port: str = Form(...)):
         # 3. Flash Firmware
         await broadcast_log(f"[SYSTEM] Flashing to {port}...")
         
+        # Define paths for all binaries
+        PARTITIONS_BIN = os.path.join("firmware", ".pio", "build", "esp32dev", "partitions.bin")
+        BOOTLOADER_BIN = os.path.join("firmware", ".pio", "build", "esp32dev", "bootloader.bin")
+
         flash_cmd = [
             sys.executable, "-m", "esptool",
             "--chip", "esp32",
@@ -326,6 +330,8 @@ async def build_and_flash(port: str = Form(...)):
             "write_flash", "-z",
             "--flash-mode", "dio",
             "--flash-size", "detect",
+            "0x1000", BOOTLOADER_BIN,
+            "0x8000", PARTITIONS_BIN,
             "0x10000", firmware_binary
         ]
 
